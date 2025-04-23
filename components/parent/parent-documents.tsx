@@ -92,6 +92,7 @@ export function ParentDocuments() {
               </div>
               <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
                 <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -168,6 +169,7 @@ export function ParentDocuments() {
                         <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                         <span className="hidden xs:inline">Télécharger</span>
                         <span className="xs:hidden">Téléch.</span>
+                      </Button>
                     </div>
                   </div>
                 </div>
