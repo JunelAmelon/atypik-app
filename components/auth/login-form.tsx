@@ -158,14 +158,27 @@ export function LoginForm() {
               Sign in
             </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 text-base"
-            >
-              <Image src="https://www.google.com/favicon.ico" alt="Google" width={20} height={20} className="mr-2" />
-              Sign in with Google
-            </Button>
+            <div className="pt-6 border-t mt-6">
+              <p className="text-sm text-muted-foreground mb-3 text-center">Accès rapide pour test</p>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 h-11"
+                  onClick={() => router.push('/parent/dashboard')}
+                >
+                  Dashboard Parent
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 h-11"
+                  onClick={() => router.push('/driver/dashboard')}
+                >
+                  Dashboard Chauffeur
+                </Button>
+              </div>
+            </div>
           </div>
         </form>
       </Form>
