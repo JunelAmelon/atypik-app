@@ -40,45 +40,46 @@ export function ParentUpcomingTrip() {
 
   return (
     <Card className="border-2 border-primary/20 bg-secondary/50">
-      <CardContent className="pt-6">
+      <CardContent className="pt-4 sm:pt-6">
         <div className="flex flex-col space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-full bg-primary/10">
-                <Car className="h-5 w-5 text-primary" />
+              <div className="p-1.5 sm:p-2 rounded-full bg-primary/10">
+                <Car className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-medium">Transport en cours</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-sm sm:text-base font-medium">Transport en cours</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   <Clock className="inline-block h-3 w-3 mr-1" /> 
                   Départ {trip.departureTime} · Arrivée prévue {trip.arrivalTime}
                 </p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" className="text-xs">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="text-xs h-8 px-2 sm:px-3">
                 <Navigation className="h-3 w-3 mr-1" />
-                Voir sur la carte
+                <span className="hidden sm:inline">Voir sur la carte</span>
+                <span className="sm:hidden">Carte</span>
               </Button>
-              <Button variant="outline" size="sm" className="text-xs">
+              <Button variant="outline" size="sm" className="text-xs h-8 px-2 sm:px-3">
                 Contacter
               </Button>
             </div>
           </div>
           
-          <div className="bg-card rounded-lg p-4">
+          <div className="bg-card rounded-lg p-3 sm:p-4">
             <div className="flex items-center space-x-3 mb-3">
-              <Avatar className="h-10 w-10 border-2 border-primary">
+              <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-primary">
                 <AvatarImage src={trip.child.avatar || undefined} alt={trip.child.name} />
-                <AvatarFallback className="bg-primary/10 text-primary">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs sm:text-sm">
                   {trip.child.name[0]}
                 </AvatarFallback>
               </Avatar>
               
               <div>
-                <h4 className="font-medium">{trip.child.name}</h4>
-                <p className="text-sm text-muted-foreground">Route vers l&apos;école</p>
+                <h4 className="text-sm sm:text-base font-medium">{trip.child.name}</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground">Route vers l&apos;école</p>
               </div>
             </div>
             
@@ -128,18 +129,18 @@ export function ParentUpcomingTrip() {
               </div>
               <Progress value={trip.progress} className="h-2" />
               
-              <div className="flex justify-between mt-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mt-4">
                 <div className="flex items-center space-x-2">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
                     <AvatarImage src={trip.driver.avatar || undefined} alt={trip.driver.name} />
                     <AvatarFallback className="bg-accent/10 text-accent">
-                      <User className="h-4 w-4" />
+                      <User className="h-3 w-3 sm:h-4 sm:w-4" />
                     </AvatarFallback>
                   </Avatar>
                   
                   <div>
-                    <p className="text-sm font-medium">{trip.driver.name}</p>
-                    <p className="text-xs flex items-center text-muted-foreground">
+                    <p className="text-xs sm:text-sm font-medium">{trip.driver.name}</p>
+                    <p className="text-[10px] sm:text-xs flex items-center text-muted-foreground">
                       {trip.driver.car} · {trip.driver.plate}
                     </p>
                   </div>
@@ -148,8 +149,9 @@ export function ParentUpcomingTrip() {
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  className="w-full sm:w-auto"
                 >
-                  <Button size="sm" className="text-xs">
+                  <Button size="sm" className="text-xs w-full sm:w-auto h-8">
                     <MapPin className="h-3 w-3 mr-1" />
                     Suivi en direct
                   </Button>

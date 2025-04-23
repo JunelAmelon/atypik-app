@@ -50,11 +50,11 @@ export function ParentDashboard() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8"
+      className="space-y-6 sm:space-y-8 px-2 sm:px-4 md:px-6 max-w-7xl mx-auto"
     >
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">Bonjour, {user?.name?.split(' ')[0]}</h1>
-        <p className="text-muted-foreground">
+      <div className="flex flex-col gap-1 sm:gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold">Bonjour, {user?.name?.split(' ')[0]}</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Bienvenue sur votre tableau de bord de transport sécurisé
         </p>
       </div>
@@ -67,15 +67,15 @@ export function ParentDashboard() {
         <motion.div variants={itemVariants}>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <CalendarRange className="h-5 w-5 text-primary" />
-                  <span>Planning de la semaine</span>
+                  <CalendarRange className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <span className="text-sm sm:text-base">Planning de la semaine</span>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-8 gap-1 text-xs"
+                  className="h-7 sm:h-8 gap-1 text-xs"
                   onClick={() => router.push('/parent/calendar')}
                 >
                   <span>Voir tout</span>
@@ -97,8 +97,8 @@ export function ParentDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-primary" />
-              <span>Notifications récentes</span>
+              <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <span className="text-sm sm:text-base">Notifications récentes</span>
             </CardTitle>
             <CardDescription>
               Vos 3 dernières notifications importantes
@@ -106,16 +106,19 @@ export function ParentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
-                <div className="mt-1 p-2 bg-primary/10 rounded-full">
+              <div className="flex flex-col sm:flex-row items-start gap-3 p-3 bg-secondary/50 rounded-lg">
+                <div className="hidden sm:block mt-1 p-2 bg-primary/10 rounded-full">
                   <Clock className="h-4 w-4 text-primary" />
                 </div>
-                <div>
-                  <h4 className="text-sm font-medium">Retard du chauffeur</h4>
+                <div className="w-full">
+                  <h4 className="text-sm font-medium flex items-center gap-2">
+                    <Clock className="sm:hidden h-4 w-4 text-primary" />
+                    Retard du chauffeur
+                  </h4>
                   <p className="text-xs text-muted-foreground mt-1">
                     Thomas sera en retard de 10 minutes ce matin pour le transport de Lucas
                   </p>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center justify-between gap-2 mt-2">
                     <span className="text-xs text-muted-foreground">Il y a 25 min</span>
                     <Button variant="link" size="sm" className="h-auto p-0 text-xs">
                       Contacter
@@ -179,22 +182,22 @@ export function ParentDashboard() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="received">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="received">Reçues</TabsTrigger>
-                <TabsTrigger value="given">Données</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
+                <TabsTrigger value="received" className="text-xs sm:text-sm">Reçus</TabsTrigger>
+                <TabsTrigger value="given" className="text-xs sm:text-sm">Donnés</TabsTrigger>
               </TabsList>
               <TabsContent value="received" className="space-y-4">
-                <div className="bg-secondary/50 p-4 rounded-lg">
-                  <div className="flex justify-between items-start">
+                <div className="bg-secondary/50 p-3 sm:p-4 rounded-lg">
+                  <div className="flex flex-wrap justify-between items-start gap-2">
                     <div>
-                      <h4 className="font-medium">Thomas Bernard</h4>
-                      <p className="text-sm text-muted-foreground">Transport du 12/06</p>
+                      <h4 className="text-sm sm:text-base font-medium">Thomas Bernard</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Transport du 12/06</p>
                     </div>
-                    <div className="flex">
+                    <div className="flex shrink-0">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star 
                           key={star} 
-                          className={`h-4 w-4 ${star <= 5 ? "text-yellow-500 fill-yellow-500" : "text-muted"}`} 
+                          className={`h-3 w-3 sm:h-4 sm:w-4 ${star <= 5 ? "text-yellow-500 fill-yellow-500" : "text-muted"}`} 
                         />
                       ))}
                     </div>
@@ -225,17 +228,17 @@ export function ParentDashboard() {
                 </div>
               </TabsContent>
               <TabsContent value="given" className="space-y-4">
-                <div className="bg-secondary/50 p-4 rounded-lg">
-                  <div className="flex justify-between items-start">
+                <div className="bg-secondary/50 p-3 sm:p-4 rounded-lg">
+                  <div className="flex flex-wrap justify-between items-start gap-2">
                     <div>
-                      <h4 className="font-medium">Thomas Bernard</h4>
-                      <p className="text-sm text-muted-foreground">Transport du 12/06</p>
+                      <h4 className="text-sm sm:text-base font-medium">Thomas Bernard</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Transport du 12/06</p>
                     </div>
-                    <div className="flex">
+                    <div className="flex shrink-0">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star 
                           key={star} 
-                          className={`h-4 w-4 ${star <= 5 ? "text-yellow-500 fill-yellow-500" : "text-muted"}`} 
+                          className={`h-3 w-3 sm:h-4 sm:w-4 ${star <= 5 ? "text-yellow-500 fill-yellow-500" : "text-muted"}`} 
                         />
                       ))}
                     </div>
