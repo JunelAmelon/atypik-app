@@ -100,7 +100,7 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="lg:hidden"
+                  className=""
                   onClick={() => setIsSidebarOpen(true)}
                 >
                   <Menu className="h-5 w-5" />

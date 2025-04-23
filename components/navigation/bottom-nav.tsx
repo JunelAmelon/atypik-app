@@ -4,11 +4,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   CalendarRange, 
-  Home, 
+  LayoutDashboard, 
   MessageSquare,
   UserRound,
   MapPin,
   Car,
+  FileText,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -24,9 +26,14 @@ export function BottomNav() {
   
   const parentNavItems = [
     {
-      icon: Home,
+      icon: LayoutDashboard,
       label: 'Accueil',
       href: '/parent/dashboard',
+    },
+    {
+      icon: Users,
+      label: 'Enfants',
+      href: '/parent/children',
     },
     {
       icon: CalendarRange,
@@ -39,20 +46,15 @@ export function BottomNav() {
       href: '/parent/tracking',
     },
     {
-      icon: MessageSquare,
-      label: 'Messages',
-      href: '/parent/messages',
-    },
-    {
-      icon: UserRound,
-      label: 'Profil',
-      href: '/parent/profile',
+      icon: FileText,
+      label: 'Documents',
+      href: '/parent/documents',
     },
   ];
   
   const driverNavItems = [
     {
-      icon: Home,
+      icon: LayoutDashboard,
       label: 'Accueil',
       href: '/driver/dashboard',
     },
@@ -85,7 +87,7 @@ export function BottomNav() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t safe-bottom">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t safe-bottom shadow-md">
       <div className="grid grid-cols-5 h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -105,12 +107,12 @@ export function BottomNav() {
                 {isActive && (
                   <motion.div
                     layoutId="bottomNavIndicator"
-                    className="absolute -bottom-2 left-0 right-0 mx-auto w-1 h-1 bg-primary rounded-full"
+                    className="absolute -bottom-1 left-0 right-0 mx-auto w-5 h-1 bg-primary rounded-full"
                     transition={{ type: "spring", duration: 0.5 }}
                   />
                 )}
               </div>
-              <span className="text-[10px]">{item.label}</span>
+              <span className="text-[10px] font-medium">{item.label}</span>
             </button>
           );
         })}
