@@ -69,7 +69,7 @@ export function LoginForm() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6"
+      className="space-y-6 w-full max-w-md mx-auto px-4 sm:px-0"
     >
       <div className="space-y-2">
         <h2 className="text-2xl font-bold tracking-tight">WELCOME BACK</h2>
@@ -160,12 +160,21 @@ export function LoginForm() {
 
             <div className="pt-6 border-t mt-6">
               <p className="text-sm text-muted-foreground mb-3 text-center">Accès rapide pour test</p>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   className="flex-1 h-11"
-                  onClick={() => router.push('/parent/dashboard')}
+                  onClick={() => {
+                    // Simuler un utilisateur parent pour le test
+                    localStorage.setItem('atypik_user', JSON.stringify({
+                      id: '1',
+                      email: 'parent@example.com',
+                      name: 'Marie Dubois',
+                      role: 'parent',
+                    }));
+                    window.location.href = '/parent/dashboard';
+                  }}
                 >
                   Dashboard Parent
                 </Button>
@@ -173,7 +182,16 @@ export function LoginForm() {
                   type="button"
                   variant="outline"
                   className="flex-1 h-11"
-                  onClick={() => router.push('/driver/dashboard')}
+                  onClick={() => {
+                    // Simuler un utilisateur chauffeur pour le test
+                    localStorage.setItem('atypik_user', JSON.stringify({
+                      id: '2',
+                      email: 'driver@example.com',
+                      name: 'Thierry Bernard',
+                      role: 'driver',
+                    }));
+                    window.location.href = '/driver/dashboard';
+                  }}
                 >
                   Dashboard Chauffeur
                 </Button>
