@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SideNav } from '@/components/navigation/side-nav';
+import { BottomNav } from '@/components/navigation/bottom-nav';
 import { NotificationsPopover } from '@/components/notifications/notifications-popover';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -46,18 +47,28 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Handle scroll for header styling
+  // Handle scroll for header styling and check for mobile
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
 
     window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
+    
+    // Initial checks
+    handleResize();
     setIsMounted(true);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -65,20 +76,20 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
     return null;
   }
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
-
   return (
     <AuthGuard allowedRoles={allowedRoles}>
       <div className="dashboard-layout">
-        {/* Desktop Sidebar */}
-        <aside className="dashboard-sidebar">
-          <div className="p-6 border-b">
-            <Logo />
-          </div>
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            <SideNav />
-          </div>
-        </aside>
+        {/* Desktop Sidebar - Hidden on Mobile */}
+        {!isMobile && (
+          <aside className="dashboard-sidebar">
+            <div className="p-6 border-b">
+              <Logo />
+            </div>
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              <SideNav />
+            </div>
+          </aside>
+        )}
 
         {/* Main Content */}
         <main className="dashboard-main">
@@ -142,7 +153,7 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
           </header>
 
           {/* Page Content */}
-          <div className="dashboard-content">
+          <div className={`dashboard-content ${isMobile ? 'pb-20' : 'pb-4'}`}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={pathname}
@@ -157,18 +168,23 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
           </div>
         </main>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - Side Sheet */}
         {isMobile && (
-          <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-            <SheetContent side="left" className="p-0 w-72">
-              <SheetHeader className="p-6 border-b">
-                <SheetTitle>
-                  <Logo />
-                </SheetTitle>
-              </SheetHeader>
-              <SideNav className="px-2" />
-            </SheetContent>
-          </Sheet>
+          <>
+            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+              <SheetContent side="left" className="p-0 w-72">
+                <SheetHeader className="p-6 border-b">
+                  <SheetTitle>
+                    <Logo />
+                  </SheetTitle>
+                </SheetHeader>
+                <SideNav className="px-2" />
+              </SheetContent>
+            </Sheet>
+            
+            {/* Bottom Navigation for Mobile */}
+            <BottomNav />
+          </>
         )}
       </div>
     </AuthGuard>

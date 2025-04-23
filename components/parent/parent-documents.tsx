@@ -62,37 +62,36 @@ export function ParentDocuments() {
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 sm:space-y-8 px-2 sm:px-4 md:px-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Documents</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold">Documents</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
             Gérez vos documents importants
           </p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Upload className="h-4 w-4 mr-2" />
+        <Button className="bg-primary hover:bg-primary/90 h-9 sm:h-10 text-xs sm:text-sm w-full sm:w-auto">
+          <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
           Ajouter un document
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <CardTitle>Liste des documents</CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <CardTitle className="text-base sm:text-lg">Liste des documents</CardTitle>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none">
+                <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
                   placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-[200px]"
+                  className="pl-8 sm:pl-9 h-8 sm:h-10 text-xs sm:text-sm w-full sm:w-[200px]"
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+                <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </div>
         </CardHeader>
@@ -103,24 +102,29 @@ export function ParentDocuments() {
                 key={doc.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-4 p-4 bg-secondary/50 rounded-lg"
+                className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-secondary/50 rounded-lg"
               >
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <FileText className="h-6 w-6 text-primary" />
+                <div className="hidden sm:flex p-2.5 sm:p-3 rounded-lg bg-primary/10">
+                  <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <h4 className="font-medium truncate">{doc.name}</h4>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                        <FileIcon className="h-3 w-3" />
-                        <span>{doc.type}</span>
-                        <span>•</span>
-                        <span>{doc.size}</span>
-                        <span>•</span>
-                        <Clock className="h-3 w-3" />
-                        <span>{doc.uploadedAt}</span>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 sm:block">
+                      <div className="sm:hidden p-2 rounded-lg bg-primary/10 mr-1">
+                        <FileText className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm sm:text-base font-medium truncate">{doc.name}</h4>
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mt-1">
+                          <FileIcon className="h-3 w-3" />
+                          <span>{doc.type}</span>
+                          <span className="hidden xs:inline">•</span>
+                          <span>{doc.size}</span>
+                          <span className="hidden xs:inline">•</span>
+                          <Clock className="h-3 w-3" />
+                          <span>{doc.uploadedAt}</span>
+                        </div>
                       </div>
                     </div>
                     <Badge
@@ -143,26 +147,27 @@ export function ParentDocuments() {
                         <Badge
                           key={index}
                           variant="outline"
-                          className="text-xs bg-primary/5 text-primary border-primary/20"
+                          className="text-[10px] sm:text-xs py-0 h-5 bg-primary/5 text-primary border-primary/20"
                         >
                           {tag}
                         </Badge>
                       ))}
                     </div>
                     <div className="flex-1" />
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" className="h-8">
-                        <Share2 className="h-4 w-4 mr-1" />
-                        Partager
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                      <Button variant="ghost" size="sm" className="h-7 sm:h-8 text-[10px] sm:text-xs flex-1 sm:flex-auto">
+                        <Share2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="hidden xs:inline">Partager</span>
+                        <span className="xs:hidden">Part.</span>
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-8">
-                        <Eye className="h-4 w-4 mr-1" />
+                      <Button variant="ghost" size="sm" className="h-7 sm:h-8 text-[10px] sm:text-xs flex-1 sm:flex-auto">
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                         Voir
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-8">
-                        <Download className="h-4 w-4 mr-1" />
-                        Télécharger
-                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 sm:h-8 text-[10px] sm:text-xs flex-1 sm:flex-auto">
+                        <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="hidden xs:inline">Télécharger</span>
+                        <span className="xs:hidden">Téléch.</span>
                     </div>
                   </div>
                 </div>
