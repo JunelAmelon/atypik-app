@@ -1,26 +1,25 @@
 'use client';
 
 import { 
-  CalendarRange, 
-  MapPin,
+  Star, 
   Clock, 
-  UserRound,
-  Car,
-  AlertTriangle,
-  Star,
-  BarChart,
-  Banknote
+  MapPin, 
+  User, 
+  AlertTriangle, 
+  ChevronRight,
+  Smile,
+  Activity,
+  HeartPulse
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/lib/auth/auth-context';
 import { DriverMissionCard } from '@/components/driver/driver-mission-card';
 import { DriverUpcomingMissions } from '@/components/driver/driver-upcoming-missions';
 import { DriverStatsCard } from '@/components/driver/driver-stats-card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function DriverDashboard() {
   const router = useRouter();
@@ -38,34 +37,105 @@ export function DriverDashboard() {
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 10, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.3 }
+      transition: {
+        type: "spring",
+        stiffness: 120
+      }
     }
   };
 
+  // Stats data
+  const stats = [
+    { 
+      label: 'Missions aujourd\'hui', 
+      value: '3', 
+      icon: <Clock className="h-5 w-5 text-orange-500" />,
+      progress: 75,
+      trend: 'up'
+    },
+    { 
+      label: 'Km parcourus', 
+      value: '27.5', 
+      icon: <MapPin className="h-5 w-5 text-orange-500" />,
+      progress: 60,
+      trend: 'up'
+    },
+    { 
+      label: 'Note moyenne', 
+      value: '4.9/5', 
+      icon: <Star className="h-5 w-5 text-orange-500" />,
+      progress: 98,
+      trend: 'stable'
+    },
+    { 
+      label: 'Enfants transportés', 
+      value: '5', 
+      icon: <User className="h-5 w-5 text-orange-500" />,
+      progress: 100,
+      trend: 'up'
+    },
+  ];
+
   return (
     <motion.div
+      className="space-y-6"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8"
     >
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">Bonjour, {user?.name?.split(' ')[0]}</h1>
-        <p className="text-muted-foreground">
-          Bienvenue sur votre espace chauffeur
-        </p>
-      </div>
+      {/* Header Section */}
+      <motion.div variants={itemVariants}>
+        <div className="flex flex-col gap-2 mb-6">
+          <h1 className="text-2xl font-bold">Bonjour, {user?.name || 'Chauffeur'} </h1>
+          <p className="text-muted-foreground">Voici un aperçu de votre journée de transport</p>
+        </div>
+        
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, index) => (
+            <motion.div 
+              key={index}
+              whileHover={{ y: -2 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Card className="h-full border-0 bg-white dark:bg-gray-800 shadow-sm rounded-xl overflow-hidden">
+                <CardContent className="p-4 flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
+                      <p className="text-2xl font-bold mt-1 text-black dark:text-white">{stat.value}</p>
+                    </div>
+                    <div className="p-2 rounded-full bg-orange-100 flex items-center justify-center">
+                      {stat.icon}
+                    </div>
+                  </div>
+                  <div className="mt-auto">
+                    <div className="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full bg-orange-500 rounded-full progress-bar`}
+                        data-progress={stat.progress}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
 
+      {/* Current Mission */}
       <motion.div variants={itemVariants}>
         <DriverMissionCard />
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <motion.div variants={itemVariants} className="md:col-span-2">
+      {/* Upcoming Missions & Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div variants={itemVariants} className="lg:col-span-2">
           <DriverUpcomingMissions />
         </motion.div>
 
@@ -74,117 +144,79 @@ export function DriverDashboard() {
         </motion.div>
       </div>
 
+      {/* Child Profile Section */}
       <motion.div variants={itemVariants}>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-primary" />
-              <span>Mes évaluations récentes</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-secondary/50 p-4 rounded-lg">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">Lucas Dubois (8 ans)</h4>
-                    <p className="text-sm text-muted-foreground">Transport du 12/06</p>
-                  </div>
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star 
-                        key={star} 
-                        className={`h-4 w-4 ${star <= 5 ? "text-yellow-500 fill-yellow-500" : "text-muted"}`} 
-                      />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-sm mt-2">
-                  &quot;Trajet parfait, Thomas est toujours très professionnel et à l&apos;heure.&quot;
-                </p>
-              </div>
-              
-              <div className="bg-secondary/50 p-4 rounded-lg">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">Léa Dubois (6 ans)</h4>
-                    <p className="text-sm text-muted-foreground">Transport du 09/06</p>
-                  </div>
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star 
-                        key={star} 
-                        className={`h-4 w-4 ${star <= 4 ? "text-yellow-500 fill-yellow-500" : "text-muted"}`} 
-                      />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-sm mt-2">
-                  &quot;Excellent chauffeur qui a su gérer l&apos;anxiété matinale de ma fille.&quot;
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      <motion.div variants={itemVariants}>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-primary" />
-              <span>Profil enfant du jour</span>
-            </CardTitle>
-            <CardDescription>
-              Consultez les besoins spécifiques de l&apos;enfant que vous transportez
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-secondary/50 p-4 rounded-lg">
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <UserRound className="h-6 w-6 text-primary" />
+        <Card className="overflow-hidden border-0 shadow-sm">
+          <div className="bg-orange-500 h-3 w-full" />
+          <CardHeader className="pb-0">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-3">
+                <div className="h-16 w-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xl">
+                  LD
                 </div>
                 <div>
-                  <h3 className="font-bold">Lucas Dubois</h3>
-                  <p className="text-sm text-muted-foreground">8 ans • École Montessori Étoile</p>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium mb-1">À propos de Lucas</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Lucas est un enfant très sociable mais a parfois du mal à rester concentré pendant les longs trajets. Il aime beaucoup parler de ses jeux vidéo préférés.
+                  <h3 className="text-xl font-bold text-black dark:text-white">Lucas Dubois</h3>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-orange-500" />
+                    École Montessori Étoile
                   </p>
                 </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Besoins spécifiques</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">Allergie sévère au gluten</p>
-                        <p className="text-xs text-muted-foreground">EpiPen dans son sac de transport</p>
-                      </div>
+              </CardTitle>
+              <div className="flex items-center gap-1 text-orange-600 bg-orange-100 px-3 py-1 rounded-full text-sm font-medium">
+                <Star className="h-4 w-4 fill-orange-500" />
+                4.9
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="space-y-4">
+              {/* About Section */}
+              <div>
+                <div className="flex items-center gap-2 text-orange-600 mb-2">
+                  <Smile className="h-4 w-4 text-orange-500" />
+                  <h4 className="text-sm font-semibold text-orange-600">À propos</h4>
+                </div>
+                <p className="text-sm">
+                  Lucas est sociable mais a du mal à rester concentré pendant les longs trajets. Passionné de jeux vidéo.
+                </p>
+              </div>
+              
+              {/* Special Needs */}
+              <div>
+                <div className="flex items-center gap-2 text-orange-600 mb-3">
+                  <AlertTriangle className="h-4 w-4 text-orange-500" />
+                  <h4 className="text-sm font-semibold text-orange-600">Besoins spécifiques</h4>
+                </div>
+                <div className="grid gap-3">
+                  <div className="flex items-start gap-3 p-3 bg-red-50/50 rounded-lg border border-red-100">
+                    <div className="p-2 bg-red-100 rounded-lg text-red-600">
+                      <HeartPulse className="h-4 w-4" />
                     </div>
-                    <div className="flex items-start gap-2">
-                      <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">TDAH diagnostiqué</p>
-                        <p className="text-xs text-muted-foreground">Besoin d&apos;activités pour rester concentré</p>
-                      </div>
+                    <div>
+                      <p className="text-sm font-medium">Allergie sévère au gluten</p>
+                      <p className="text-xs text-muted-foreground mt-1">EpiPen dans son sac</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 bg-red-50/50 rounded-lg border border-red-100">
+                    <div className="p-2 bg-red-100 rounded-lg text-red-600">
+                      <Activity className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">TDAH diagnostiqué</p>
+                      <p className="text-xs text-muted-foreground mt-1">Activités pour concentration</p>
                     </div>
                   </div>
                 </div>
-                
-                <div className="pt-2">
-                  <Button size="sm" variant="default" className="w-full bg-primary hover:bg-primary/90">
-                    Voir fiche complète
-                  </Button>
-                </div>
               </div>
+              
+              {/* Action Button */}
+              <Button 
+                variant="ghost" 
+                className="w-full mt-2 text-orange-600 hover:bg-orange-100/50 hover:text-orange-700"
+                onClick={() => router.push('/driver/children/lucas-dubois')}
+              >
+                Voir fiche complète <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
             </div>
           </CardContent>
         </Card>

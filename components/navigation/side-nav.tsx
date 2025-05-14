@@ -115,11 +115,22 @@ export function SideNav({ className }: SideNavProps) {
   const navItems = isParent ? parentNavItems : driverNavItems;
   
   return (
-    <div className={cn("py-4", className)}>
-      <div className="px-3 py-2">
-        <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-primary">
-          Menu principal
-        </h2>
+    <aside className={cn("h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-sm flex flex-col", className)}>
+      {/* En-tête du menu */}
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center space-x-2">
+          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+            <UserRound className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">{user.name || 'Utilisateur'}</p>
+            <p className="text-xs text-muted-foreground">{isParent ? 'Espace Parent' : 'Espace Chauffeur'}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Menu principal */}
+      <div className="flex-1 overflow-y-auto py-4 px-3">
         <div className="space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
@@ -127,32 +138,38 @@ export function SideNav({ className }: SideNavProps) {
             return (
               <Button
                 key={item.href}
-                variant={isActive ? "secondary" : "ghost"}
+                variant="ghost"
                 className={cn(
-                  "w-full justify-start gap-x-3 font-medium",
+                  "w-full justify-start gap-x-3 font-medium rounded-xl h-11 mb-1 transition-all duration-200",
                   isActive 
-                    ? "bg-primary/10" 
-                    : "hover:bg-primary/5"
+                    ? "bg-primary/10 dark:bg-primary/20 text-primary" 
+                    : "hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-600 dark:text-slate-300"
                 )}
                 onClick={() => router.push(item.href)}
               >
-                <item.icon className={cn(
-                  "h-5 w-5",
-                  isActive ? "text-primary" : "text-primary"
-                )} />
-                <span className={isActive ? "text-primary" : "text-foreground"}>
+                <div className={cn(
+                  "flex items-center justify-center h-7 w-7 rounded-lg",
+                  isActive ? "bg-primary/20 dark:bg-primary/30" : "bg-slate-100 dark:bg-slate-800"
+                )}>
+                  <item.icon className={cn(
+                    "h-4 w-4",
+                    isActive ? "text-primary" : "text-slate-500 dark:text-slate-400"
+                  )} />
+                </div>
+                <span>
                   {item.label}
                 </span>
+                {isActive && (
+                  <div className="ml-auto h-2 w-2 rounded-full bg-primary" />
+                )}
               </Button>
             );
           })}
         </div>
       </div>
 
-      <div className="px-3 py-2 mt-4">
-        <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-primary">
-          Paramètres
-        </h2>
+      {/* Menu du bas */}
+      <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50">
         <div className="space-y-1">
           {bottomNavItems.map((item) => {
             const isActive = pathname === item.href;
@@ -160,27 +177,23 @@ export function SideNav({ className }: SideNavProps) {
             return (
               <Button
                 key={item.href}
-                variant={isActive ? "secondary" : "ghost"}
+                variant="ghost"
+                size="sm"
                 className={cn(
-                  "w-full justify-start gap-x-3 font-medium",
+                  "w-full justify-start gap-x-3 font-medium text-sm rounded-lg",
                   isActive 
-                    ? "bg-primary/10" 
-                    : "hover:bg-primary/5"
+                    ? "bg-primary/10 dark:bg-primary/20 text-primary" 
+                    : "hover:bg-slate-200/80 dark:hover:bg-slate-700/80 text-slate-600 dark:text-slate-400"
                 )}
                 onClick={() => router.push(item.href)}
               >
-                <item.icon className={cn(
-                  "h-5 w-5",
-                  isActive ? "text-primary" : "text-primary"
-                )} />
-                <span className={isActive ? "text-primary" : "text-foreground"}>
-                  {item.label}
-                </span>
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
               </Button>
             );
           })}
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

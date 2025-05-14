@@ -33,7 +33,7 @@ export function ParentDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // États pour les dialogues
+  // u00c9tats pour les dialogues
   const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
   const [isThankDialogOpen, setIsThankDialogOpen] = useState(false);
   const [selectedReview, setSelectedReview] = useState<{id: string; name: string} | null>(null);
@@ -58,7 +58,7 @@ export function ParentDashboard() {
     }
   };
   
-  // Gestionnaires d'événements
+  // Gestionnaires d'u00e9vu00e9nements
   const handleReply = (id: string, name: string) => {
     setSelectedReview({id, name});
     setIsReplyDialogOpen(true);
@@ -71,16 +71,16 @@ export function ParentDashboard() {
   
   const handleSendReply = () => {
     toast({
-      title: 'Réponse envoyée',
-      description: `Votre réponse a été envoyée à ${selectedReview?.name}.`,
+      title: 'Ru00e9ponse envoyu00e9e',
+      description: `Votre ru00e9ponse a u00e9tu00e9 envoyu00e9e u00e0 ${selectedReview?.name}.`,
     });
     setIsReplyDialogOpen(false);
   };
   
   const handleSendThanks = () => {
     toast({
-      title: 'Remerciement envoyé',
-      description: `Votre message de remerciement a été envoyé à ${selectedReview?.name}.`,
+      title: 'Remerciement envoyu00e9',
+      description: `Votre message de remerciement a u00e9tu00e9 envoyu00e9 u00e0 ${selectedReview?.name}.`,
     });
     setIsThankDialogOpen(false);
   };
@@ -100,7 +100,7 @@ export function ParentDashboard() {
         <div className="flex flex-col gap-1 sm:gap-2">
           <h1 className="text-2xl sm:text-3xl font-bold">Bonjour, {user?.name?.split(' ')[0]}</h1>
           <p className="text-sm sm:text-base text-muted-foreground">
-            Bienvenue sur votre tableau de bord de transport sécurisé
+            Bienvenue sur votre tableau de bord de transport su00e9curisu00e9
           </p>
         </div>
 
@@ -114,7 +114,7 @@ export function ParentDashboard() {
                 <span>Mission en cours</span>
               </CardTitle>
               <CardDescription>
-                Suivez en temps réel le transport de votre enfant
+                Suivez en temps ru00e9el le transport de votre enfant
               </CardDescription>
             </CardHeader>
             <CardContent className="pb-6">
@@ -166,22 +166,22 @@ export function ParentDashboard() {
                   <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/20">
                     <Star className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <span>Dernières évaluations</span>
+                  <span>Derniu00e8res u00e9valuations</span>
                 </div>
               </CardTitle>
               <CardDescription>
-                Vos évaluations récentes de trajets
+                Vos u00e9valuations ru00e9centes de trajets
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="received" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
-                  <TabsTrigger value="received">Reçues</TabsTrigger>
-                  <TabsTrigger value="given">Données</TabsTrigger>
+                  <TabsTrigger value="received">Reu00e7ues</TabsTrigger>
+                  <TabsTrigger value="given">Donnu00e9es</TabsTrigger>
                 </TabsList>
                 <TabsContent value="received" className="space-y-4">
                   <div className="space-y-4">
-                    {/* Première évaluation reçue */}
+                    {/* Premiu00e8re u00e9valuation reu00e7ue */}
                     <div className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
                       <div className="relative p-4 sm:p-5">
                         <div className="flex items-start gap-3">
@@ -215,7 +215,7 @@ export function ParentDashboard() {
                             
                             <div className="mt-2 text-sm">
                               <p className="relative pl-3 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:rounded-full before:bg-primary/30">
-                                &quot;Lucas a été très calme pendant le trajet. Il a beaucoup discuté de son nouveau jeu vidéo.&quot;
+                                &quot;Lucas a u00e9tu00e9 tru00e8s calme pendant le trajet. Il a beaucoup discutu00e9 de son nouveau jeu vidu00e9o.&quot;
                               </p>
                             </div>
                             
@@ -236,7 +236,7 @@ export function ParentDashboard() {
                                 onClick={() => handleReply('1', 'Thomas Durand')}
                               >
                                 <MessageSquare className="h-3 w-3 mr-1" />
-                                Répondre
+                                Ru00e9pondre
                               </Button>
                             </div>
                           </div>
@@ -244,7 +244,7 @@ export function ParentDashboard() {
                       </div>
                     </div>
                     
-                    {/* Deuxième évaluation reçue */}
+                    {/* Deuxiu00e8me u00e9valuation reu00e7ue */}
                     <div className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
                       <div className="relative p-4 sm:p-5">
                         <div className="flex items-start gap-3">
@@ -278,7 +278,7 @@ export function ParentDashboard() {
                             
                             <div className="mt-2 text-sm">
                               <p className="relative pl-3 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:rounded-full before:bg-purple-300 dark:before:bg-purple-700">
-                                &quot;Léa était un peu anxieuse ce matin mais s&apos;est détendue après quelques minutes.&quot;
+                                &quot;Lu00e9a u00e9tait un peu anxieuse ce matin mais s&apos;est du00e9tendue apru00e8s quelques minutes.&quot;
                               </p>
                             </div>
                             
@@ -299,7 +299,7 @@ export function ParentDashboard() {
                                 onClick={() => handleReply('2', 'Marie Leroy')}
                               >
                                 <MessageSquare className="h-3 w-3 mr-1" />
-                                Répondre
+                                Ru00e9pondre
                               </Button>
                             </div>
                           </div>
@@ -311,7 +311,7 @@ export function ParentDashboard() {
                 
                 <TabsContent value="given" className="space-y-4">
                   <div className="space-y-4">
-                    {/* Évaluations données */}
+                    {/* u00c9valuations donnu00e9es */}
                     <div className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
                       <div className="relative p-4 sm:p-5">
                         <div className="flex items-start gap-3">
@@ -326,7 +326,7 @@ export function ParentDashboard() {
                               <div>
                                 <h4 className="text-sm font-semibold">Thomas Bernard</h4>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                  <p className="text-xs text-muted-foreground">12 juin · Votre évaluation</p>
+                                  <p className="text-xs text-muted-foreground">12 juin · Votre u00e9valuation</p>
                                   <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-300">
                                     Aller-retour
                                   </span>
@@ -345,7 +345,7 @@ export function ParentDashboard() {
                             
                             <div className="mt-2 text-sm">
                               <p className="relative pl-3 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:rounded-full before:bg-primary/30">
-                                &quot;Trajet parfait, Thomas est toujours très professionnel et à l&apos;heure.&quot;
+                                &quot;Trajet parfait, Thomas est toujours tru00e8s professionnel et u00e0 l&apos;heure.&quot;
                               </p>
                             </div>
                             
@@ -366,11 +366,11 @@ export function ParentDashboard() {
         </motion.div>
       </motion.div>
       
-      {/* Dialog pour répondre à une évaluation */}
+      {/* Dialog pour ru00e9pondre u00e0 une u00e9valuation */}
       <Dialog open={isReplyDialogOpen} onOpenChange={setIsReplyDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Répondre à {selectedReview?.name}</DialogTitle>
+            <DialogTitle>Ru00e9pondre u00e0 {selectedReview?.name}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -380,7 +380,7 @@ export function ParentDashboard() {
               <textarea
                 id="message"
                 className="flex h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Merci pour votre évaluation..."
+                placeholder="Merci pour votre u00e9valuation..."
               />
             </div>
           </div>

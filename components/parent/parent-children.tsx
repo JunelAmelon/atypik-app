@@ -7,10 +7,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Plus, User, AlertTriangle, Pencil } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { AddChildDialog } from './add-child-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export function ParentChildren() {
-  // Mock children data
-  const children = [
+  const { toast } = useToast();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  
+  // Mock children data - initial state
+  const [children, setChildren] = useState([
     {
       id: '1',
       name: 'Lucas Dubois',
@@ -27,7 +32,26 @@ export function ParentChildren() {
       avatar: null,
       needs: ['Anxiété']
     }
-  ];
+  ]);
+  
+  // Fonction pour ajouter un nouvel enfant
+  const handleAddChild = (data: any) => {
+    const newChild = {
+      id: `${Date.now()}`, // ID unique basé sur le timestamp
+      name: `${data.firstName} ${data.lastName}`,
+      age: parseInt(data.age),
+      school: data.school,
+      avatar: null,
+      needs: data.specialNeeds ? data.specialNeeds.split(',').map((need: string) => need.trim()) : []
+    };
+    
+    setChildren([...children, newChild]);
+    
+    toast({
+      title: 'Enfant ajouté',
+      description: `${newChild.name} a été ajouté avec succès`,
+    });
+  };
 
   return (
     <div className="space-y-6 sm:space-y-8 px-2 sm:px-4 md:px-6 max-w-7xl mx-auto">
@@ -39,11 +63,21 @@ export function ParentChildren() {
       </div>
       
       <div className="flex justify-end">
-        <Button className="bg-primary hover:bg-primary/90 h-9 sm:h-10 text-xs sm:text-sm w-full sm:w-auto max-w-[200px]">
+        <Button 
+          className="bg-primary hover:bg-primary/90 h-9 sm:h-10 text-xs sm:text-sm w-full sm:w-auto max-w-[200px]"
+          onClick={() => setIsAddDialogOpen(true)}
+        >
           <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
           Ajouter un enfant
         </Button>
       </div>
+      
+      {/* Dialog pour ajouter un enfant */}
+      <AddChildDialog 
+        open={isAddDialogOpen} 
+        onOpenChange={setIsAddDialogOpen}
+        onAddChild={handleAddChild}
+      />
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {children.map((child) => (

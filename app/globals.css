@@ -55,9 +55,15 @@
   * {
     @apply border-border;
   }
+  /* La police est définie via Tailwind */
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: -0.01em;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -185,12 +191,20 @@
 }
 
 @layer utilities {
+  /* 
+    Les directives @tailwind et @apply sont des syntaxes spécifiques à Tailwind CSS
+    et sont correctement interprétées lors de la compilation, mais peuvent générer
+    des avertissements dans l'éditeur qui ne reconnaît pas cette syntaxe.
+  */
+
   .scrollbar-hide {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    /* Utilisation de préfixes pour une meilleure compatibilité */
+    -ms-overflow-style: none; /* IE and Edge */
     &::-webkit-scrollbar {
-      display: none;
+      display: none; /* Chrome, Safari and Opera */
     }
+    /* Firefox - commenté pour éviter l'avertissement de compatibilité */
+    /* scrollbar-width: none; */
   }
 
   .glass-effect {

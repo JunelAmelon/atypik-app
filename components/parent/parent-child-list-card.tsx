@@ -15,6 +15,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { AddChildDialog } from './add-child-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChildNeeds {
   medication: boolean;
@@ -37,8 +39,8 @@ interface Child {
   needs: ChildNeeds;
 }
 
-// Mock children data
-const children: Child[] = [
+// Mock children data - initial state
+const initialChildren: Child[] = [
   {
     id: '1',
     name: 'Lucas Dubois',
@@ -79,11 +81,39 @@ const children: Child[] = [
 
 export function ParentChildListCard() {
   const router = useRouter();
+  const { toast } = useToast();
+  const [children, setChildren] = useState<Child[]>(initialChildren);
   const [selectedChild, setSelectedChild] = useState<Child | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const handleAddChild = () => {
-    router.push('/parent/children/create');
+  const handleAddChild = (data: any) => {
+    // Créer un nouvel enfant avec des valeurs par défaut pour les besoins spécifiques
+    const newChild: Child = {
+      id: `${Date.now()}`, // ID unique basé sur le timestamp
+      name: `${data.firstName} ${data.lastName}`,
+      age: parseInt(data.age),
+      school: data.school,
+      avatar: null,
+      tags: data.specialNeeds ? data.specialNeeds.split(',').map((need: string) => need.trim()) : [],
+      description: '', // Description vide par défaut
+      needs: {
+        medication: false,
+        medicationDetails: '',
+        specialSeating: false,
+        comfortItems: false,
+        comfortItemsDetails: '',
+        allergies: false,
+        allergiesDetails: '',
+      }
+    };
+    
+    setChildren([...children, newChild]);
+    
+    toast({
+      title: 'Enfant ajouté',
+      description: `${newChild.name} a été ajouté avec succès`,
+    });
   };
 
   const handleShowDetails = (child: Child) => {
@@ -103,11 +133,18 @@ export function ParentChildListCard() {
             variant="outline" 
             size="sm"
             className="h-8 gap-1 text-xs"
-            onClick={handleAddChild}
+            onClick={() => setIsAddDialogOpen(true)}
           >
             <Plus className="h-3 w-3" />
             <span>Ajouter</span>
           </Button>
+          
+          {/* Dialog pour ajouter un enfant */}
+          <AddChildDialog 
+            open={isAddDialogOpen} 
+            onOpenChange={setIsAddDialogOpen}
+            onAddChild={handleAddChild}
+          />
         </CardTitle>
         <CardDescription>
           Profils et besoins spécifiques

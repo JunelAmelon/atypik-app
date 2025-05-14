@@ -30,11 +30,11 @@ export function Logo({ variant = 'default', className, onClick }: LogoProps) {
       onClick={handleClick}
     >
       <div className="relative flex items-center justify-center h-10 w-10 bg-primary rounded-xl overflow-hidden">
-        <Car className="h-6 w-6 text-white" />
+        <span className="text-white font-bold text-2xl">A</span>
       </div>
       {variant === 'default' && (
         <span className="text-2xl font-bold text-primary">
-          Atypik
+          Atypik Driver
         </span>
       )}
     </div>

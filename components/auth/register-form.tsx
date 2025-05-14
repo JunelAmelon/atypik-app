@@ -51,6 +51,7 @@ const driverSchema = z.object({
   ...commonFieldsSchema,
   licenseNumber: z.string().min(5, 'Numéro de permis trop court'),
   insuranceNumber: z.string().min(5, 'Numéro d\'assurance trop court'),
+  address: z.string().min(5, 'Adresse trop courte'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',
   path: ['confirmPassword'],
@@ -87,6 +88,7 @@ export function RegisterForm() {
       phone: '',
       licenseNumber: '',
       insuranceNumber: '',
+      address: '',
       password: '',
       confirmPassword: '',
     },
@@ -131,32 +133,30 @@ export function RegisterForm() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6"
+      className="space-y-6 w-full"
     >
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Créer un compte</h2>
-        <p className="text-muted-foreground">
-          Choisissez votre profil et complétez le formulaire
+      <div className="space-y-2 text-center">
+        <h2 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">Inscription</h2>
+        <p className="text-muted-foreground text-sm">
+          Créez votre compte en quelques clics
         </p>
       </div>
 
       <Tabs
         defaultValue="parent"
-        value={selectedRole}
         onValueChange={(value) => setSelectedRole(value as UserRole)}
-        className="w-full"
       >
-        <TabsList className="grid grid-cols-2 h-11">
-          <TabsTrigger value="parent" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <UserRound className="mr-2 h-5 w-5" />
-            Parent
+        <TabsList className="grid grid-cols-2 mb-8 p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
+          <TabsTrigger value="parent" className="flex items-center gap-2 py-3 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-primary data-[state=active]:shadow-sm">
+            <UserRound size={18} />
+            <span>Parent</span>
           </TabsTrigger>
-          <TabsTrigger value="driver" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <Car className="mr-2 h-5 w-5" />
-            Chauffeur
+          <TabsTrigger value="driver" className="flex items-center gap-2 py-3 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-primary data-[state=active]:shadow-sm">
+            <Car size={18} />
+            <span>Chauffeur</span>
           </TabsTrigger>
         </TabsList>
 
@@ -176,9 +176,9 @@ export function RegisterForm() {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Prénom</FormLabel>
+                          <FormLabel className="text-sm font-medium">Prénom</FormLabel>
                           <FormControl>
-                            <Input placeholder="Marie" {...field} className="h-11" />
+                            <Input placeholder="Marie" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -189,9 +189,9 @@ export function RegisterForm() {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Nom</FormLabel>
+                          <FormLabel className="text-sm font-medium">Nom</FormLabel>
                           <FormControl>
-                            <Input placeholder="Dupont" {...field} className="h-11" />
+                            <Input placeholder="Dupont" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -204,9 +204,9 @@ export function RegisterForm() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-sm font-medium">Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="exemple@email.com" {...field} className="h-11" />
+                          <Input placeholder="exemple@email.com" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -218,9 +218,9 @@ export function RegisterForm() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Téléphone</FormLabel>
+                        <FormLabel className="text-sm font-medium">Téléphone</FormLabel>
                         <FormControl>
-                          <Input placeholder="06 12 34 56 78" {...field} className="h-11" />
+                          <Input placeholder="06 12 34 56 78" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -232,9 +232,9 @@ export function RegisterForm() {
                     name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Adresse</FormLabel>
+                        <FormLabel className="text-sm font-medium">Adresse</FormLabel>
                         <FormControl>
-                          <Input placeholder="123 rue des Lilas, 75001 Paris" {...field} className="h-11" />
+                          <Input placeholder="123 rue des Lilas, 75001 Paris" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -247,9 +247,9 @@ export function RegisterForm() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Mot de passe</FormLabel>
+                          <FormLabel className="text-sm font-medium">Mot de passe</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} className="h-11" />
+                            <Input type="password" placeholder="••••••••" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -260,9 +260,9 @@ export function RegisterForm() {
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Confirmer</FormLabel>
+                          <FormLabel className="text-sm font-medium">Confirmer</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} className="h-11" />
+                            <Input type="password" placeholder="••••••••" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -273,7 +273,7 @@ export function RegisterForm() {
                   <Button
                     type="submit"
                     disabled={isParentSubmitting}
-                    className="w-full h-11 text-base mt-2"
+                    className="w-full h-11 text-base mt-2 bg-primary hover:bg-primary/90 shadow-sm transition-all duration-200 hover:shadow-md"
                   >
                     {isParentSubmitting ? (
                       <Loader size="sm" className="mr-2" />
@@ -300,9 +300,9 @@ export function RegisterForm() {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Prénom</FormLabel>
+                          <FormLabel className="text-sm font-medium">Prénom</FormLabel>
                           <FormControl>
-                            <Input placeholder="Thomas" {...field} className="h-11" />
+                            <Input placeholder="Thomas" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -313,9 +313,9 @@ export function RegisterForm() {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Nom</FormLabel>
+                          <FormLabel className="text-sm font-medium">Nom</FormLabel>
                           <FormControl>
-                            <Input placeholder="Martin" {...field} className="h-11" />
+                            <Input placeholder="Martin" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -328,9 +328,9 @@ export function RegisterForm() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-sm font-medium">Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="exemple@email.com" {...field} className="h-11" />
+                          <Input placeholder="exemple@email.com" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -342,9 +342,9 @@ export function RegisterForm() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Téléphone</FormLabel>
+                        <FormLabel className="text-sm font-medium">Téléphone</FormLabel>
                         <FormControl>
-                          <Input placeholder="06 12 34 56 78" {...field} className="h-11" />
+                          <Input placeholder="06 12 34 56 78" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -356,10 +356,15 @@ export function RegisterForm() {
                       control={driverForm.control}
                       name="licenseNumber"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>N° de permis</FormLabel>
+                        <FormItem className="space-y-1.5">
+                          <FormLabel className="text-sm font-medium">N° de permis</FormLabel>
                           <FormControl>
-                            <Input placeholder="123456789" {...field} className="h-11" />
+                            <div className="relative">
+                              <Input placeholder="123456789" {...field} className="h-12 pl-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200" />
+                              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="14" x="3" y="5" rx="2"/><path d="M7 12h10"/><path d="M7 16h10"/><path d="M7 8h10"/></svg>
+                              </div>
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -369,10 +374,15 @@ export function RegisterForm() {
                       control={driverForm.control}
                       name="insuranceNumber"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>N° d&apos;assurance</FormLabel>
+                        <FormItem className="space-y-1.5">
+                          <FormLabel className="text-sm font-medium">N° d&apos;assurance</FormLabel>
                           <FormControl>
-                            <Input placeholder="987654321" {...field} className="h-11" />
+                            <div className="relative">
+                              <Input placeholder="987654321" {...field} className="h-12 pl-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200" />
+                              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+                              </div>
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -380,15 +390,34 @@ export function RegisterForm() {
                     />
                   </div>
 
+                  <FormField
+                    control={driverForm.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-sm font-medium">Adresse</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input placeholder="123 rue des Lilas, 75001 Paris" {...field} className="h-12 pl-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200" />
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                            </div>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={driverForm.control}
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Mot de passe</FormLabel>
+                          <FormLabel className="text-sm font-medium">Mot de passe</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} className="h-11" />
+                            <Input type="password" placeholder="••••••••" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -399,9 +428,9 @@ export function RegisterForm() {
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Confirmer</FormLabel>
+                          <FormLabel className="text-sm font-medium">Confirmer</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} className="h-11" />
+                            <Input type="password" placeholder="••••••••" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -412,7 +441,7 @@ export function RegisterForm() {
                   <Button
                     type="submit"
                     disabled={isDriverSubmitting}
-                    className="w-full h-11 text-base mt-2"
+                    className="w-full h-11 text-base mt-2 bg-primary hover:bg-primary/90 shadow-sm transition-all duration-200 hover:shadow-md"
                   >
                     {isDriverSubmitting ? (
                       <Loader size="sm" className="mr-2" />
@@ -429,7 +458,7 @@ export function RegisterForm() {
       <div className="text-center text-sm">
         <p className="text-muted-foreground">
           Déjà inscrit ?{' '}
-          <Link href="/login" className="text-primary hover:underline font-medium inline-flex items-center">
+          <Link href="/login" className="text-primary hover:underline font-medium inline-flex items-center transition-colors">
             <ChevronLeft className="h-3 w-3 mr-1" />
             Se connecter
           </Link>

@@ -100,9 +100,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkAuth = async () => {
       try {
         // In a real app, you would validate the token with your backend
-        const storedUser = localStorage.getItem('atypik_user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        if (typeof window !== 'undefined') {
+          const storedUser = localStorage.getItem('atypik_user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          }
         }
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -117,10 +119,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Store user data when it changes
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('atypik_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('atypik_user');
+    if (typeof window !== 'undefined') {
+      if (user) {
+        localStorage.setItem('atypik_user', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('atypik_user');
+      }
     }
   }, [user]);
 
