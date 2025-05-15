@@ -6,8 +6,7 @@ import { Star, BarChart, Banknote } from 'lucide-react';
 
 export function DriverStatsCard() {
   return (
-    <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-br from-white to-orange-50/20 dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-orange-500">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 dark:bg-primary/10 rounded-bl-full -z-0"></div>
+    <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-primary">
       <CardHeader className="pb-3 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

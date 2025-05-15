@@ -53,28 +53,28 @@ export function DriverDashboard() {
     { 
       label: 'Missions aujourd\'hui', 
       value: '3', 
-      icon: <Clock className="h-5 w-5 text-orange-500" />,
+      icon: <Clock className="h-5 w-5 text-primary" />,
       progress: 75,
       trend: 'up'
     },
     { 
       label: 'Km parcourus', 
       value: '27.5', 
-      icon: <MapPin className="h-5 w-5 text-orange-500" />,
+      icon: <MapPin className="h-5 w-5 text-primary" />,
       progress: 60,
       trend: 'up'
     },
     { 
       label: 'Note moyenne', 
       value: '4.9/5', 
-      icon: <Star className="h-5 w-5 text-orange-500" />,
+      icon: <Star className="h-5 w-5 text-primary" />,
       progress: 98,
       trend: 'stable'
     },
     { 
       label: 'Enfants transportés', 
       value: '5', 
-      icon: <User className="h-5 w-5 text-orange-500" />,
+      icon: <User className="h-5 w-5 text-primary" />,
       progress: 100,
       trend: 'up'
     },
@@ -102,21 +102,21 @@ export function DriverDashboard() {
               whileHover={{ y: -2 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Card className="h-full border-0 bg-gradient-to-br from-white to-orange-50/30 dark:from-gray-800 dark:to-gray-700 shadow-lg rounded-xl overflow-hidden border-l-4 border-l-orange-500">
+              <Card className="h-full border-0 bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700 shadow-lg rounded-xl overflow-hidden border-l-4 border-l-primary">
                 <CardContent className="p-5 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.label}</p>
                       <p className="text-2xl font-bold mt-1 text-gray-900 dark:text-white">{stat.value}</p>
                     </div>
-                    <div className="p-2.5 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center shadow-sm">
+                    <div className="p-2.5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shadow-sm">
                       {stat.icon}
                     </div>
                   </div>
                   <div className="mt-auto pt-2">
                     <div className="h-2.5 w-full bg-gray-100 dark:bg-gray-600/50 rounded-full overflow-hidden shadow-inner">
                       <div 
-                        className={`h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full progress-bar`}
+                        className={`h-full bg-gradient-to-r from-primary to-primary/80 rounded-full progress-bar`}
                         data-progress={stat.progress}
                       />
                     </div>
@@ -146,24 +146,23 @@ export function DriverDashboard() {
 
       {/* Child Profile Section */}
       <motion.div variants={itemVariants}>
-        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-orange-50/20 dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-orange-500">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 dark:bg-primary/10 rounded-bl-full -z-0"></div>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-primary">
           <CardHeader className="pb-0 relative z-10">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-3">
-                <div className="h-16 w-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xl">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
                   LD
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-black dark:text-white">Lucas Dubois</h3>
                   <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-orange-500" />
+                    <MapPin className="h-3.5 w-3.5 text-primary" />
                     École Montessori Étoile
                   </p>
                 </div>
               </CardTitle>
-              <div className="flex items-center gap-1 text-orange-600 bg-orange-100 px-3 py-1 rounded-full text-sm font-medium">
-                <Star className="h-4 w-4 fill-orange-500" />
+              <div className="flex items-center gap-1 text-primary bg-primary/10 px-3 py-1 rounded-full text-sm font-medium">
+                <Star className="h-4 w-4 fill-primary" />
                 4.9
               </div>
             </div>
@@ -172,9 +171,9 @@ export function DriverDashboard() {
             <div className="space-y-4">
               {/* About Section */}
               <div>
-                <div className="flex items-center gap-2 text-orange-600 mb-2">
-                  <Smile className="h-4 w-4 text-orange-500" />
-                  <h4 className="text-sm font-semibold text-orange-600">À propos</h4>
+                <div className="flex items-center gap-2 text-primary mb-2">
+                  <Smile className="h-4 w-4 text-primary" />
+                  <h4 className="text-sm font-semibold text-primary">À propos</h4>
                 </div>
                 <p className="text-sm">
                   Lucas est sociable mais a du mal à rester concentré pendant les longs trajets. Passionné de jeux vidéo.
@@ -183,9 +182,9 @@ export function DriverDashboard() {
               
               {/* Special Needs */}
               <div>
-                <div className="flex items-center gap-2 text-orange-600 mb-3">
-                  <AlertTriangle className="h-4 w-4 text-orange-500" />
-                  <h4 className="text-sm font-semibold text-orange-600">Besoins spécifiques</h4>
+                <div className="flex items-center gap-2 text-primary mb-3">
+                  <AlertTriangle className="h-4 w-4 text-primary" />
+                  <h4 className="text-sm font-semibold text-primary">Besoins spécifiques</h4>
                 </div>
                 <div className="grid gap-3">
                   <div className="flex items-start gap-3 p-3 bg-red-50/50 rounded-lg border border-red-100">
@@ -212,7 +211,7 @@ export function DriverDashboard() {
               {/* Action Button */}
               <Button 
                 variant="ghost" 
-                className="w-full mt-2 text-orange-600 hover:bg-orange-100/50 hover:text-orange-700"
+                className="w-full mt-2 text-primary hover:bg-primary/5 hover:text-primary/90"
                 onClick={() => router.push('/driver/children/lucas-dubois')}
               >
                 Voir fiche complète <ChevronRight className="h-4 w-4 ml-2" />

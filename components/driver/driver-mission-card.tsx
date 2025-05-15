@@ -60,8 +60,7 @@ export default function DriverMissionCard() {
   };
 
   return (
-    <Card className="border-0 bg-gradient-to-br from-white to-orange-50/20 dark:from-gray-800 dark:to-gray-700/80 shadow-lg overflow-hidden border-t-4 border-t-orange-500 rounded-xl">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 dark:bg-primary/10 rounded-bl-full -z-0"></div>
+    <Card className="border-0 bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 shadow-lg overflow-hidden border-t-4 border-t-primary rounded-xl">
       <CardContent className="pt-6 relative z-10">
         <div className="flex flex-col space-y-5">
           <div className="flex flex-wrap gap-4 items-center justify-between">
