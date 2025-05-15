@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MapPin } from 'lucide-react';
+import { MapPin, Car } from 'lucide-react';
 
 interface AnimatedRouteProps {
   fromName: string;
@@ -24,8 +24,9 @@ export function AnimatedRoute({
   toStatus,
   fromTime,
   toTime,
-  className
-}: AnimatedRouteProps) {
+  className,
+  progress = 50 // Valeur par du00e9faut de 50%
+}: AnimatedRouteProps & { progress?: number }) {
   return (
     <div className={`flex flex-col gap-4 ${className}`}>
       {/* Départ */}
@@ -56,28 +57,41 @@ export function AnimatedRoute({
         )}
       </motion.div>
 
-      {/* Ligne animée */}
-      <div className="relative flex justify-center">
+      {/* Ligne animée avec effet de trajet - design simplifié */}
+      <div className="relative flex justify-center my-4 h-24">
+        {/* Ligne de base */}
         <div className="absolute h-full w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+        
+        {/* Ligne de progression */}
         <motion.div 
           initial={{ height: 0 }}
-          animate={{ height: '100%' }}
-          transition={{ duration: 1, delay: 0.5 }}
+          animate={{ height: `${progress}%` }}
+          transition={{ duration: 1.2, delay: 0.5 }}
           className="absolute w-0.5 bg-primary origin-top"
         ></motion.div>
+        
+        {/* Point de départ */}
+        <div className="absolute top-0 z-10 -translate-y-1/2">
+          <div className="h-3 w-3 rounded-full bg-green-500 shadow-md"></div>
+        </div>
+        
+        {/* Icône de voiture qui se déplace en fonction du pourcentage */}
         <motion.div 
-          initial={{ scale: 0, y: 0 }}
-          animate={{ scale: 1, y: [0, 20, 0] }}
-          transition={{ 
-            duration: 2,
-            repeat: Infinity,
-            repeatType: "loop",
-            delay: 1
-          }}
-          className="absolute top-0 z-10"
+          initial={{ opacity: 0, top: 0 }}
+          animate={{ opacity: 1, top: `${progress}%` }}
+          transition={{ duration: 1.2, delay: 0.8 }}
+          className="absolute z-20 -ml-3"
+          style={{ top: `${progress}%` }}
         >
-          <div className="h-3 w-3 rounded-full bg-primary shadow-md"></div>
+          <div className="flex items-center justify-center">
+            <Car className="h-4 w-4 text-primary" />
+          </div>
         </motion.div>
+        
+        {/* Point d'arrivée */}
+        <div className="absolute bottom-0 z-10 translate-y-1/2">
+          <div className="h-3 w-3 rounded-full bg-red-500 shadow-md"></div>
+        </div>
       </div>
 
       {/* Arrivée */}

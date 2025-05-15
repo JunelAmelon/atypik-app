@@ -1,16 +1,20 @@
 'use client';
 
-import { Car, Clock, MapPin, Navigation, User, CheckCircle2, AlertTriangle, Phone } from 'lucide-react';
+import { useState } from 'react';
+import { Car, Clock, MapPin, Navigation, User, CheckCircle2, AlertTriangle, Phone, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { AnimatedRoute } from '@/components/ui/animated-route';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 export default function DriverMissionCard() {
+  // État pour la popup des besoins
+  const [showNeeds, setShowNeeds] = useState(false);
+
   // Simulated active mission
   const mission = {
     id: '123',
@@ -61,6 +65,85 @@ export default function DriverMissionCard() {
     window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`, '_blank');
   };
 
+  // Composant de popup pour afficher les besoins
+  const NeedsPopup = () => (
+    <AnimatePresence>
+      {showNeeds && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowNeeds(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 20 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Besoins spécifiques</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 rounded-full"
+                onClick={() => setShowNeeds(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex items-center space-x-3 mb-3">
+                <Avatar className="h-10 w-10 border border-primary/20">
+                  <AvatarImage src={mission.child.avatar || undefined} alt={mission.child.name} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                    {mission.child.name.split(' ')[0][0]}{mission.child.name.split(' ')[1]?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h4 className="font-semibold">{mission.child.name.split(' ')[0]} {mission.child.name.split(' ')[1]?.[0]}.</h4>
+                  <p className="text-sm text-muted-foreground">{mission.child.age} ans</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <h5 className="text-sm font-semibold flex items-center">
+                <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
+                Besoins à prendre en compte
+              </h5>
+              
+              <div className="space-y-3 mt-2">
+                {mission.child.needs.map((need, index) => (
+                  <div key={index} className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800/30">
+                    <h6 className="font-medium text-amber-800 dark:text-amber-300 mb-1">{need}</h6>
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      {need === 'TDAH' ? 
+                        "Trouble du déficit de l'attention avec hyperactivité. Prévoir des pauses régulières et un environnement calme." : 
+                        "Éviter tout contact avec des aliments contenant du gluten. Vérifier les collations."}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <Button 
+                className="w-full" 
+                onClick={() => setShowNeeds(false)}
+              >
+                J'ai compris
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   return (
     <Card className="border-0 bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 shadow-lg overflow-hidden border-t-4 border-t-primary rounded-xl">
       <CardContent className="pt-6 relative z-10">
@@ -79,11 +162,11 @@ export default function DriverMissionCard() {
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap mt-2 sm:mt-0">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-xs font-medium whitespace-nowrap text-primary dark:text-primary hover:text-primary dark:hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10 border-primary/10 dark:border-primary/20"
+                className="text-xs font-medium whitespace-nowrap text-primary dark:text-primary hover:text-primary dark:hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10 border-primary/10 dark:border-primary/20 w-full sm:w-auto"
                 onClick={handleCallParent}
               >
                 <Phone className="h-3.5 w-3.5 mr-1.5 text-primary dark:text-primary" />
@@ -91,7 +174,7 @@ export default function DriverMissionCard() {
               </Button>
               <Button 
                 size="sm" 
-                className="text-xs font-medium whitespace-nowrap bg-primary hover:bg-primary/90 text-white border-0"
+                className="text-xs font-medium whitespace-nowrap bg-primary hover:bg-primary/90 text-white border-0 w-full sm:w-auto"
                 onClick={handleOpenNavigation}
               >
                 <Navigation className="h-3.5 w-3.5 mr-1.5" />
@@ -100,8 +183,8 @@ export default function DriverMissionCard() {
             </div>
           </div>
           
-          <div className="bg-card rounded-xl p-5 border border-primary/10 shadow-md">
-            <div className="flex items-center space-x-4 mb-4">
+          <div className="bg-card rounded-xl p-4 sm:p-5 border border-primary/10 shadow-md">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
               <Avatar className="h-12 w-12 border-2 border-primary shadow-md">
                 <AvatarImage src={mission.child.avatar || undefined} alt={mission.child.name} />
                 <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
@@ -110,12 +193,13 @@ export default function DriverMissionCard() {
               </Avatar>
               
               <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-base">{mission.child.name} ({mission.child.age} ans)</h4>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <h4 className="font-semibold text-base">{mission.child.name.split(' ')[0]} {mission.child.name.split(' ')[1]?.[0]}. ({mission.child.age} ans)</h4>
                   <Button 
                     variant="secondary" 
                     size="sm" 
-                    className="h-8 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border-amber-200 dark:border-amber-800/30 shadow-sm"
+                    className="h-8 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border-amber-200 dark:border-amber-800/30 shadow-sm w-full sm:w-auto"
+                    onClick={() => setShowNeeds(true)}
                   >
                     <AlertTriangle className="h-3.5 w-3.5 mr-1.5 text-amber-500 dark:text-amber-400" />
                     Voir besoins
@@ -137,16 +221,6 @@ export default function DriverMissionCard() {
             
             <div className="space-y-2 mb-6 mt-2">
               <div className="flex items-start">
-                <div className="flex flex-col items-center mr-3">
-                  <div className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-100 dark:bg-green-900/30 flex items-center justify-center shadow-sm">
-                    <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="w-0.5 h-10 bg-gradient-to-b from-green-500 to-primary"></div>
-                  <div className="h-6 w-6 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center shadow-sm animate-pulse">
-                    <div className="h-2 w-2 rounded-full bg-primary"></div>
-                  </div>
-                </div>
-                
                 <div className="space-y-6 flex-1">
                   <div className="mt-4">
                     <AnimatedRoute
@@ -154,13 +228,14 @@ export default function DriverMissionCard() {
                       fromAddress={mission.from.address}
                       toName={mission.to.name}
                       toAddress={mission.to.address}
+                      progress={mission.progress}
                       fromStatus={
                         <span className="flex items-center">
                           <CheckCircle2 className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
                           Départ effectué
                         </span>
                       }
-                      toTime={
+                      toStatus={
                         <span className="flex items-center">
                           <Clock className="h-3 w-3 mr-1 text-gray-700 dark:text-gray-300" />
                           Arrivée prévue: {mission.arrivalTime}
@@ -227,11 +302,11 @@ export default function DriverMissionCard() {
                 <motion.div
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  className="shadow-sm"
+                  className="shadow-sm w-full sm:w-auto mt-2 sm:mt-0"
                 >
                   <Button 
                     size="sm" 
-                    className="text-xs font-medium whitespace-nowrap bg-primary hover:bg-primary/90 text-white"
+                    className="text-xs font-medium whitespace-nowrap bg-primary hover:bg-primary/90 text-white w-full sm:w-auto"
                     onClick={handleViewMap}
                   >
                     <MapPin className="h-3.5 w-3.5 mr-1.5" />
@@ -243,6 +318,9 @@ export default function DriverMissionCard() {
           </div>
         </div>
       </CardContent>
+      
+      {/* Popup des besoins */}
+      <NeedsPopup />
     </Card>
   );
 }

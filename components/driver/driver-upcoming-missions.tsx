@@ -106,21 +106,21 @@ export function DriverUpcomingMissions() {
                 className="bg-card rounded-xl p-5 border border-primary/10 shadow-md"
                 whileHover={{ scale: 1.01 }}
               >
-                <div className="flex items-center space-x-4 mb-4">
-                  <Avatar className="h-12 w-12 border-2 border-primary shadow-md">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
+                  <Avatar className="h-12 w-12 border-2 border-primary shadow-md flex-shrink-0">
                     <AvatarImage src={mission.child.avatar || undefined} alt={mission.child.name} />
                     <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
                       {mission.child.name[0]}
                     </AvatarFallback>
                   </Avatar>
                   
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-base">{mission.child.name} ({mission.child.age} ans)</h4>
+                  <div className="flex-1 min-w-0 w-full">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <h4 className="font-semibold text-base truncate">{mission.child.name.split(' ')[0]} {mission.child.name.split(' ')[1]?.[0]}. ({mission.child.age} ans)</h4>
                       <Button 
                         variant="secondary" 
                         size="sm" 
-                        className="h-8 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border-amber-200 dark:border-amber-800/30 shadow-sm"
+                        className="h-8 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border-amber-200 dark:border-amber-800/30 shadow-sm w-full sm:w-auto"
                       >
                         <AlertTriangle className="h-3.5 w-3.5 mr-1.5 text-amber-500 dark:text-amber-400" />
                         Voir besoins
@@ -158,6 +158,7 @@ export function DriverUpcomingMissions() {
                         fromAddress={mission.from.address}
                         toName={mission.to.name}
                         toAddress={mission.to.address}
+                        progress={68} // Valeur fixe pour la démonstration, pourrait être dynamique
                         fromStatus={
                           <span className="flex items-center">
                             <CheckCircle2 className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
@@ -176,15 +177,15 @@ export function DriverUpcomingMissions() {
                 </div>
                 
                 <div className="space-y-3 mt-5">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="text-sm font-semibold mb-1">Prochain trajet à {mission.time}</h4>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-semibold mb-1 truncate">Prochain trajet à {mission.time}</h4>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
                         <Clock className="h-3 w-3 text-primary dark:text-primary" />
                         <span className="font-medium text-primary dark:text-primary">15 min</span> restant · 5.2 km
                       </p>
                     </div>
-                    <div className="bg-primary/5 dark:bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 dark:border-primary/30 shadow-sm">
+                    <div className="bg-primary/5 dark:bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 dark:border-primary/30 shadow-sm flex-shrink-0">
                       <p className="text-sm font-bold text-primary dark:text-primary">68%</p>
                     </div>
                   </div>
@@ -200,11 +201,11 @@ export function DriverUpcomingMissions() {
                     <motion.div
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
-                      className="shadow-sm"
+                      className="shadow-sm w-full sm:w-auto"
                     >
                       <Button 
                         size="sm" 
-                        className="text-xs font-medium whitespace-nowrap bg-primary hover:bg-primary/90 text-white"
+                        className="text-xs font-medium whitespace-nowrap bg-primary hover:bg-primary/90 text-white w-full sm:w-auto"
                       >
                         <MapPin className="h-3.5 w-3.5 mr-1.5" />
                         Voir détails

@@ -92,143 +92,116 @@ export function ParentUpcomingTrip() {
     <>
       <Card className="border-0 shadow-md bg-card overflow-hidden">
         <CardContent className="p-0">
-          {/* En-tête avec statut */}
-          <div className="bg-primary/5 border-b border-primary/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+          {/* En-tête avec statut - Amélioré pour mobile */}
+          <div className="bg-primary/5 border-b border-primary/10 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 w-full">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Car className="h-5 w-5 text-primary" />
               </div>
               
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-base font-semibold">Transport en cours</h3>
                   <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 text-[10px] font-medium px-2 py-0 h-5">
                     En route
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
                   Départ {trip.startTime} · Arrivée estimée {trip.estimatedArrival}
                 </p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-2 sm:mt-0 w-full sm:w-auto">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-xs h-9 border-primary/20 text-primary hover:bg-primary/5 hover:text-primary"
-                onClick={handleViewMap}
+                className="text-xs h-9 border-primary/10 text-primary hover:text-primary hover:bg-primary/5 flex-1 sm:flex-initial"
+                onClick={handleContactDriver}
               >
-                <Navigation className="h-3.5 w-3.5 mr-1.5" />
-                <span className="hidden sm:inline">Voir sur la carte</span>
-                <span className="sm:hidden">Carte</span>
+                <Phone className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                Contacter
               </Button>
               
               <Button 
-                variant="outline" 
                 size="sm" 
-                className="text-xs h-9 border-primary/20 text-primary hover:bg-primary/5 hover:text-primary"
-                onClick={handleContactDriver}
+                className="text-xs h-9 bg-primary hover:bg-primary/90 flex-1 sm:flex-initial"
+                onClick={handleViewMap}
               >
-                <Phone className="h-3.5 w-3.5 mr-1.5" />
-                <span>Contacter</span>
+                <MapPin className="h-3.5 w-3.5 mr-1.5" />
+                Voir carte
               </Button>
             </div>
           </div>
           
-          {/* Contenu principal */}
-          <div className="p-4 sm:p-5">
-            {/* Informations sur l'enfant */}
-            <div className="flex items-center gap-3 mb-5">
-              <Avatar className="h-12 w-12 border-2 border-primary">
-                <AvatarImage src={trip.child.avatar || undefined} alt={trip.child.name} />
-                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                  {trip.child.name[0]}
-                </AvatarFallback>
-              </Avatar>
+          {/* Contenu principal - Amélioré pour mobile */}
+          <div className="p-3 sm:p-4">
+            {/* Progression du trajet */}
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-sm font-medium">Progression du trajet</span>
+                </div>
+                <span className="text-sm font-bold">{trip.progress}%</span>
+              </div>
               
-              <div>
-                <h4 className="text-base font-semibold">{trip.child.name}</h4>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 text-[10px] font-medium px-2 py-0 h-5">
-                    Aller école
-                  </Badge>
-                  <p className="text-xs text-muted-foreground">
-                    {trip.timeEstimate} restant
-                  </p>
+              <div className="h-2 bg-primary/10 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${trip.progress}%` }}
+                  transition={{ duration: 1.5 }}
+                  className="h-full bg-primary rounded-full"
+                ></motion.div>
+              </div>
+              
+              <div className="flex justify-between mt-1.5">
+                <div className="flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <span className="text-xs text-muted-foreground">{trip.from.name}</span>
+                </div>
+                <span className="text-xs text-primary font-medium">{trip.timeEstimate} restant</span>
+                <div className="flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-primary"></div>
+                  <span className="text-xs text-muted-foreground">{trip.to.name}</span>
                 </div>
               </div>
             </div>
             
-            {/* Itinéraire */}
-            <div className="bg-secondary/30 rounded-xl p-4 mb-5 relative overflow-hidden">
-              <div className="flex items-start gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-50 dark:bg-green-900/20 flex items-center justify-center z-10">
-                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                  </div>
-                  <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
-                  <div className="h-6 w-6 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center z-10">
-                    <div className="h-2 w-2 rounded-full bg-primary"></div>
-                  </div>
-                </div>
-                
-                <div className="flex-1 space-y-5">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">{trip.from.name}</p>
-                      <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        <span>Départ à {trip.departureTime}</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{trip.from.address}</p>
-                  </div>
-                  
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">{trip.to.name}</p>
-                      <p className="text-xs font-medium">{trip.arrivalTime}</p>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{trip.to.address}</p>
-                  </div>
-                </div>
+            {/* Informations sur le trajet */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div className="bg-secondary/20 rounded-lg p-3">
+                <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Départ</h4>
+                <p className="text-sm font-medium mb-1 line-clamp-1">{trip.from.name}</p>
+                <p className="text-xs text-muted-foreground line-clamp-1">{trip.from.address}</p>
               </div>
               
-              {/* Barre de progression */}
-              <div className="mt-5">
-                <div className="flex justify-between text-xs mb-1.5">
-                  <span className="font-medium text-primary">{trip.progress}% du trajet</span>
-                  <span>{trip.distance}</span>
-                </div>
-                <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden relative">
-                  {/* Utilisation d'une classe dynamique pour la largeur */}
-                  <div 
-                    className={`h-full bg-primary rounded-full transition-all duration-500 ease-in-out absolute top-0 left-0 progress-bar-${Math.round(trip.progress)}`}
-                  ></div>
-                </div>
+              <div className="bg-secondary/20 rounded-lg p-3">
+                <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Arrivée</h4>
+                <p className="text-sm font-medium mb-1 line-clamp-1">{trip.to.name}</p>
+                <p className="text-xs text-muted-foreground line-clamp-1">{trip.to.address}</p>
               </div>
             </div>
             
-            {/* Informations sur le chauffeur */}
-            <div className="flex items-center justify-between bg-secondary/30 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 border border-primary/20">
+            {/* Informations sur l'enfant et le chauffeur */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between pt-3 border-t border-dashed border-primary/10">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <Avatar className="h-10 w-10 border-2 border-primary/20 flex-shrink-0">
                   <AvatarImage src={trip.driver.avatar || undefined} alt={trip.driver.name} />
                   <AvatarFallback className="bg-primary/5 text-primary">
                     {trip.driver.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">{trip.driver.name}</p>
-                    <div className="flex items-center text-amber-500">
-                      <Star className="h-3 w-3 fill-amber-500" />
-                      <span className="text-xs ml-0.5">{trip.driver.rating}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-sm font-medium truncate">{trip.driver.name}</p>
+                    <div className="flex items-center gap-0.5 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded px-1.5 py-0.5 flex-shrink-0">
+                      <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                      <span className="text-xs font-medium">{trip.driver.rating}</span>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground truncate">
                     {trip.driver.car} · <span className="font-medium">{trip.driver.plate}</span>
                   </p>
                 </div>
@@ -236,7 +209,7 @@ export function ParentUpcomingTrip() {
               
               <Button 
                 size="sm" 
-                className={`text-xs h-9 ${isLiveTrackingActive ? 'bg-primary/90 hover:bg-primary/80' : 'bg-primary hover:bg-primary/90'}`}
+                className={`text-xs h-9 ${isLiveTrackingActive ? 'bg-primary/90 hover:bg-primary/80' : 'bg-primary hover:bg-primary/90'} w-full sm:w-auto mt-2 sm:mt-0`}
                 onClick={handleLiveTracking}
               >
                 <MapPin className="h-3.5 w-3.5 mr-1.5" />
