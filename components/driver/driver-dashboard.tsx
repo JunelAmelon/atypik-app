@@ -20,6 +20,7 @@ import { DriverMissionCard } from '@/components/driver/driver-mission-card';
 import { DriverUpcomingMissions } from '@/components/driver/driver-upcoming-missions';
 import { DriverStatsCard } from '@/components/driver/driver-stats-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 export function DriverDashboard() {
   const router = useRouter();
@@ -107,7 +108,15 @@ export function DriverDashboard() {
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.label}</p>
-                      <p className="text-2xl font-bold mt-1 text-gray-900 dark:text-white">{stat.value}</p>
+                      <p className="text-2xl font-bold mt-1 text-gray-900 dark:text-white">
+                        <AnimatedCounter 
+                          value={stat.value} 
+                          duration={1.5} 
+                          delay={0.2 + index * 0.1}
+                          suffix={stat.label === 'Km parcourus' ? ' km' : ''}
+                          decimalPlaces={stat.label === 'Km parcourus' ? 1 : 0}
+                        />
+                      </p>
                     </div>
                     <div className="p-2.5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shadow-sm">
                       {stat.icon}
@@ -115,9 +124,11 @@ export function DriverDashboard() {
                   </div>
                   <div className="mt-auto pt-2">
                     <div className="h-2.5 w-full bg-gray-100 dark:bg-gray-600/50 rounded-full overflow-hidden shadow-inner">
-                      <div 
-                        className={`h-full bg-gradient-to-r from-primary to-primary/80 rounded-full progress-bar`}
-                        data-progress={stat.progress}
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${stat.progress}%` }}
+                        transition={{ duration: 1.5, delay: 0.5 + index * 0.1, ease: "easeOut" }}
+                        className={`h-full bg-gradient-to-r from-primary to-primary/80 rounded-full`}
                       />
                     </div>
                   </div>

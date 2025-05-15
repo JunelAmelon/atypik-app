@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import { AnimatedRoute } from '@/components/ui/animated-route';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 export default function DriverMissionCard() {
   // Simulated active mission
@@ -146,32 +148,25 @@ export default function DriverMissionCard() {
                 </div>
                 
                 <div className="space-y-6 flex-1">
-                  <div className="p-2.5 rounded-lg border border-primary/200 dark:border-primary/800/30">
-                    <p className="text-sm font-medium flex items-center gap-2 text-black dark:text-white">
-                      <MapPin className="h-4 w-4 text-primary dark:text-primary" />
-                      {mission.from.name}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{mission.from.address}</p>
-                    <div className="flex justify-end">
-                      <p className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center mt-1">
-                        <CheckCircle2 className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
-                        Départ effectué
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="p-2.5 rounded-lg border border-primary/200 dark:border-primary/800/30">
-                    <p className="text-sm font-medium flex items-center gap-2 text-black dark:text-white">
-                      <MapPin className="h-4 w-4 text-primary dark:text-primary" />
-                      {mission.to.name}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{mission.to.address}</p>
-                    <div className="flex justify-end">
-                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center mt-1">
-                        <Clock className="h-3 w-3 mr-1 text-gray-700 dark:text-gray-300" />
-                        Arrivée prévue: {mission.arrivalTime}
-                      </p>
-                    </div>
+                  <div className="mt-4">
+                    <AnimatedRoute
+                      fromName={mission.from.name}
+                      fromAddress={mission.from.address}
+                      toName={mission.to.name}
+                      toAddress={mission.to.address}
+                      fromStatus={
+                        <span className="flex items-center">
+                          <CheckCircle2 className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
+                          Départ effectué
+                        </span>
+                      }
+                      toTime={
+                        <span className="flex items-center">
+                          <Clock className="h-3 w-3 mr-1 text-gray-700 dark:text-gray-300" />
+                          Arrivée prévue: {mission.arrivalTime}
+                        </span>
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -180,22 +175,35 @@ export default function DriverMissionCard() {
             <div className="space-y-3 mt-5">
               <div className="flex justify-between items-center">
                 <div>
-                  <h4 className="text-sm font-semibold mb-1">En route vers l&apos;école</h4>
+                  <h4 className="text-sm font-semibold mb-1">En route vers l'école</h4>
                   <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <Clock className="h-3 w-3 text-primary dark:text-primary" />
                     <span className="font-medium text-primary dark:text-primary">{mission.timeEstimate}</span> restant · {mission.distance}
                   </p>
                 </div>
-                <div className="bg-primary/5 dark:bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 dark:border-primary/30 shadow-sm">
-                  <p className="text-sm font-bold text-primary dark:text-primary">{mission.progress}%</p>
-                </div>
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.8 }}
+                  className="bg-primary/5 dark:bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 dark:border-primary/30 shadow-sm"
+                >
+                  <p className="text-sm font-bold text-primary dark:text-primary">
+                    <AnimatedCounter 
+                      value={mission.progress} 
+                      duration={2} 
+                      suffix="%" 
+                    />
+                  </p>
+                </motion.div>
               </div>
               
               <div className="relative h-2.5 bg-primary/10 dark:bg-primary/20 rounded-full overflow-hidden shadow-inner">
-                <div 
-                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-primary/80 rounded-full progress-bar"
-                  data-progress={mission.progress}
-                ></div>
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${mission.progress}%` }}
+                  transition={{ duration: 1.8, delay: 0.3, ease: "easeOut" }}
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-primary/80 rounded-full"
+                ></motion.div>
               </div>
               
               <div className="flex flex-wrap justify-between items-center gap-4 mt-5 pt-4 border-t border-dashed border-primary/20 dark:border-primary/30">

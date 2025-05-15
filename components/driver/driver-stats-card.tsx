@@ -3,6 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Star, BarChart, Banknote } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 export function DriverStatsCard() {
   return (
@@ -34,16 +36,25 @@ export function DriverStatsCard() {
                 <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Note moyenne</span>
               </div>
               <div className="flex items-center">
-                <span className="text-3xl font-bold text-yellow-700 dark:text-yellow-400">4.9</span>
+                <motion.span
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="text-3xl font-bold text-yellow-700 dark:text-yellow-400"
+                >
+                  <AnimatedCounter value={4.9} duration={2} decimalPlaces={1} />
+                </motion.span>
                 <span className="text-xs font-medium text-yellow-600/70 dark:text-yellow-500/70 ml-1 mt-2">/5</span>
               </div>
             </div>
             
             <div className="relative h-2.5 bg-yellow-100 dark:bg-yellow-900/30 rounded-full overflow-hidden">
-              <div 
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full progress-bar"
-                data-progress={98}
-              ></div>
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: '98%' }}
+                transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full"
+              ></motion.div>
             </div>
             
             <div className="flex justify-between mt-2">
@@ -70,9 +81,23 @@ export function DriverStatsCard() {
                   <p className="text-xs font-medium text-teal-700 dark:text-teal-400">Missions</p>
                 </div>
                 <div className="flex items-baseline">
-                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">24</p>
+                  <motion.p
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                    className="text-2xl font-bold text-teal-700 dark:text-teal-400"
+                  >
+                    <AnimatedCounter value={24} duration={1.5} delay={0.6} />
+                  </motion.p>
                   <p className="text-xs font-medium text-teal-600/70 dark:text-teal-500/70 ml-2">
-                    <span className="text-green-600 dark:text-green-400">+8%</span> vs sem. dernière
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 1.2 }}
+                      className="text-green-600 dark:text-green-400"
+                    >
+                      +8%
+                    </motion.span> vs sem. dernière
                   </p>
                 </div>
               </div>
@@ -85,9 +110,23 @@ export function DriverStatsCard() {
                   <p className="text-xs font-medium text-teal-700 dark:text-teal-400">Km parcourus</p>
                 </div>
                 <div className="flex items-baseline">
-                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">187</p>
+                  <motion.p
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
+                    className="text-2xl font-bold text-teal-700 dark:text-teal-400"
+                  >
+                    <AnimatedCounter value={187} duration={2} delay={0.8} />
+                  </motion.p>
                   <p className="text-xs font-medium text-teal-600/70 dark:text-teal-500/70 ml-2">
-                    <span className="text-green-600 dark:text-green-400">+5%</span> vs sem. dernière
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 1.4 }}
+                      className="text-green-600 dark:text-green-400"
+                    >
+                      +5%
+                    </motion.span> vs sem. dernière
                   </p>
                 </div>
               </div>
@@ -102,16 +141,24 @@ export function DriverStatsCard() {
                 </div>
                 <span className="text-sm font-medium text-green-800 dark:text-green-300">Gains du mois</span>
               </div>
-              <div>
-                <span className="text-2xl font-bold text-green-700 dark:text-green-400">1 250€</span>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1 }}
+              >
+                <span className="text-2xl font-bold text-green-700 dark:text-green-400">
+                  <AnimatedCounter value={1250} duration={2.5} delay={1} prefix="" suffix="€" />
+                </span>
+              </motion.div>
             </div>
             
             <div className="relative h-2.5 bg-green-100 dark:bg-green-900/30 rounded-full overflow-hidden">
-              <div 
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full progress-bar"
-                data-progress={75}
-              ></div>
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: '75%' }}
+                transition={{ duration: 1.5, delay: 1.2, ease: "easeOut" }}
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full"
+              ></motion.div>
             </div>
             
             <div className="flex justify-between mt-2">

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, User, AlertTriangle, CheckCircle2, Navigation, Phone, Car } from 'lucide-react';
+import { AnimatedRoute } from '@/components/ui/animated-route';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 // Mock upcoming missions data
 const upcomingMissions = [
@@ -150,34 +152,25 @@ export function DriverUpcomingMissions() {
                       </div>
                     </div>
                     
-                    <div className="space-y-6 flex-1">
-                      <div className="p-2.5 rounded-lg border border-primary/200 dark:border-primary/800/30">
-                        <p className="text-sm font-medium flex items-center gap-2 text-black dark:text-white">
-                          <MapPin className="h-4 w-4 text-primary dark:text-primary" />
-                          {mission.from.name}
-                        </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{mission.from.address}</p>
-                        <div className="flex justify-end">
-                          <p className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center mt-1">
+                    <div className="mt-4">
+                      <AnimatedRoute
+                        fromName={mission.from.name}
+                        fromAddress={mission.from.address}
+                        toName={mission.to.name}
+                        toAddress={mission.to.address}
+                        fromStatus={
+                          <span className="flex items-center">
                             <CheckCircle2 className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
                             Départ effectué
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="p-2.5 rounded-lg border border-primary/200 dark:border-primary/800/30">
-                        <p className="text-sm font-medium flex items-center gap-2 text-black dark:text-white">
-                          <MapPin className="h-4 w-4 text-primary dark:text-primary" />
-                          {mission.to.name}
-                        </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{mission.to.address}</p>
-                        <div className="flex justify-end">
-                          <p className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center mt-1">
+                          </span>
+                        }
+                        toTime={
+                          <span className="flex items-center">
                             <Clock className="h-3 w-3 mr-1 text-gray-700 dark:text-gray-300" />
                             Arrivée prévue: 08:30
-                          </p>
-                        </div>
-                      </div>
+                          </span>
+                        }
+                      />
                     </div>
                   </div>
                 </div>
