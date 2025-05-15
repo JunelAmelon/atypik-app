@@ -102,21 +102,21 @@ export function DriverDashboard() {
               whileHover={{ y: -2 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Card className="h-full border-0 bg-white dark:bg-gray-800 shadow-sm rounded-xl overflow-hidden">
-                <CardContent className="p-4 flex flex-col h-full">
-                  <div className="flex justify-between items-start mb-2">
+              <Card className="h-full border-0 bg-gradient-to-br from-white to-orange-50/30 dark:from-gray-800 dark:to-gray-700 shadow-lg rounded-xl overflow-hidden border-l-4 border-l-orange-500">
+                <CardContent className="p-5 flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-3">
                     <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
-                      <p className="text-2xl font-bold mt-1 text-black dark:text-white">{stat.value}</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.label}</p>
+                      <p className="text-2xl font-bold mt-1 text-gray-900 dark:text-white">{stat.value}</p>
                     </div>
-                    <div className="p-2 rounded-full bg-orange-100 flex items-center justify-center">
+                    <div className="p-2.5 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center shadow-sm">
                       {stat.icon}
                     </div>
                   </div>
-                  <div className="mt-auto">
-                    <div className="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="mt-auto pt-2">
+                    <div className="h-2.5 w-full bg-gray-100 dark:bg-gray-600/50 rounded-full overflow-hidden shadow-inner">
                       <div 
-                        className={`h-full bg-orange-500 rounded-full progress-bar`}
+                        className={`h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full progress-bar`}
                         data-progress={stat.progress}
                       />
                     </div>
@@ -146,9 +146,9 @@ export function DriverDashboard() {
 
       {/* Child Profile Section */}
       <motion.div variants={itemVariants}>
-        <Card className="overflow-hidden border-0 shadow-sm">
-          <div className="bg-orange-500 h-3 w-full" />
-          <CardHeader className="pb-0">
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-orange-50/20 dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-orange-500">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 dark:bg-primary/10 rounded-bl-full -z-0"></div>
+          <CardHeader className="pb-0 relative z-10">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-3">
                 <div className="h-16 w-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xl">
