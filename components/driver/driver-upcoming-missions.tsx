@@ -141,10 +141,10 @@ export function DriverUpcomingMissions() {
                         <h5 className="font-medium text-amber-700 dark:text-amber-400">{need}</h5>
                         <p className="text-sm text-amber-600/80 dark:text-amber-300/80 mt-1">
                           {need === 'TDAH' ? 
-                            'Peut avoir besoin d\'attention supplémentaire et de patience. Préfère un environnement calme.' : 
+                            "Peut avoir besoin d'attention supplémentaire et de patience. Préfère un environnement calme." : 
                             need === 'Allergie gluten' ?
-                            'Ne doit pas consommer d\'aliments contenant du gluten. Apporte généralement son propre repas.' :
-                            'Peut manifester de l\'anxiété lors des transitions. Prévoir un temps d\'adaptation et rassurer l\'enfant.'}
+                            "Ne doit pas consommer d'aliments contenant du gluten. Apporte généralement son propre repas." :
+                            "Peut manifester de l'anxiété lors des transitions. Prévoir un temps d'adaptation et rassurer l'enfant."}
                         </p>
                       </div>
                     </div>
