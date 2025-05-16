@@ -161,15 +161,15 @@ export function DriverDashboardNew() {
         id: 'SN001',
         title: 'Allergie sévère au gluten',
         description: 'EpiPen dans son sac à dos bleu',
-        severity: 'high',
-        icon: 'heartPulse'
+        severity: 'high' as const,
+        icon: 'heartPulse' as const
       },
       {
         id: 'SN002',
         title: 'TDAH diagnostiqué',
         description: 'Peut avoir besoin d\'activités pour maintenir sa concentration',
-        severity: 'medium',
-        icon: 'activity'
+        severity: 'medium' as const,
+        icon: 'activity' as const
       }
     ]
   };
