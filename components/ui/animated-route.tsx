@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MapPin, Car } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 interface AnimatedRouteProps {
   fromName: string;
@@ -57,42 +57,8 @@ export function AnimatedRoute({
         )}
       </motion.div>
 
-      {/* Ligne animée avec effet de trajet - design simplifié */}
-      <div className="relative flex justify-center my-4 h-24">
-        {/* Ligne de base */}
-        <div className="absolute h-full w-0.5 bg-gray-200 dark:bg-gray-700"></div>
-        
-        {/* Ligne de progression */}
-        <motion.div 
-          initial={{ height: 0 }}
-          animate={{ height: `${progress}%` }}
-          transition={{ duration: 1.2, delay: 0.5 }}
-          className="absolute w-0.5 bg-primary origin-top"
-        ></motion.div>
-        
-        {/* Point de départ */}
-        <div className="absolute top-0 z-10 -translate-y-1/2">
-          <div className="h-3 w-3 rounded-full bg-green-500 shadow-md"></div>
-        </div>
-        
-        {/* Icône de voiture qui se déplace en fonction du pourcentage */}
-        <motion.div 
-          initial={{ opacity: 0, top: 0 }}
-          animate={{ opacity: 1, top: `${progress}%` }}
-          transition={{ duration: 1.2, delay: 0.8 }}
-          className="absolute z-20 -ml-3"
-          style={{ top: `${progress}%` }}
-        >
-          <div className="flex items-center justify-center">
-            <Car className="h-4 w-4 text-primary" />
-          </div>
-        </motion.div>
-        
-        {/* Point d'arrivée */}
-        <div className="absolute bottom-0 z-10 translate-y-1/2">
-          <div className="h-3 w-3 rounded-full bg-red-500 shadow-md"></div>
-        </div>
-      </div>
+      {/* Espace entre les deux éléments */}
+      <div className="my-4"></div>
 
       {/* Arrivée */}
       <motion.div 

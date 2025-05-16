@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { AnimatedRoute } from '@/components/ui/animated-route';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 
-function DriverMissionCard() {
+export default function DriverMissionCard() {
   // États pour les popups
   const [showNeeds, setShowNeeds] = useState(false);
   const [showMap, setShowMap] = useState(false);
@@ -316,44 +316,34 @@ function DriverMissionCard() {
                   </div>
                 </div>
                 
-                {/* Informations sur le parent */}
+                {/* Informations sur le chauffeur */}
                 <div className="flex items-center justify-between bg-secondary/30 rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     <Avatar className="relative flex shrink-0 overflow-hidden rounded-full h-10 w-10 border border-primary/20">
                       <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-primary/5 text-primary">
-                        {mission.parent.name.split(' ').map(n => n[0]).join('')}
+                        {mission.driver.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{mission.parent.name}</p>
-                        <Badge variant="outline" className="text-[10px] h-5 py-0 px-2 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30 font-medium">
-                          Parent
-                        </Badge>
+                        <p className="text-sm font-medium">{mission.driver.name}</p>
+                        <div className="flex items-center text-amber-500">
+                          <Star className="h-3 w-3 fill-amber-500" />
+                          <span className="text-xs ml-0.5">{mission.driver.rating}</span>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3 text-primary" />
-                        <span>{mission.from.address}</span>
+                      <p className="text-xs text-muted-foreground">
+                        {mission.driver.vehicle} · <span className="font-medium">{mission.driver.licensePlate}</span>
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline"
-                      className="border-primary/20 text-primary hover:bg-primary/5 hover:text-primary text-xs h-9 px-3 rounded-md"
-                      onClick={handleViewMap}
-                    >
-                      <MapPin className="h-3.5 w-3.5 mr-1.5" />
-                      <span className="hidden sm:inline">Carte</span>
-                    </Button>
-                    <Button 
-                      className="text-primary-foreground rounded-md px-3 text-xs h-9 bg-primary hover:bg-primary/90"
-                      onClick={handleCallParent}
-                    >
-                      <Phone className="h-3.5 w-3.5 mr-1.5" />
-                      Contacter
-                    </Button>
-                  </div>
+                  <Button 
+                    className="text-primary-foreground rounded-md px-3 text-xs h-9 bg-primary hover:bg-primary/90"
+                    onClick={handleViewMap}
+                  >
+                    <MapPin className="h-3.5 w-3.5 mr-1.5" />
+                    Suivre en direct
+                  </Button>
                 </div>
               </div>
             </div>
@@ -367,6 +357,3 @@ function DriverMissionCard() {
     </>
   );
 }
-
-export { DriverMissionCard };
-export default DriverMissionCard;

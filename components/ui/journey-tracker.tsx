@@ -45,7 +45,7 @@ export function JourneyTracker({
           </div>
           
           {/* Track */}
-          <div className="relative w-1 bg-gray-200 dark:bg-gray-700" style={{ height: '100px' }}>
+          <div className="relative w-1 bg-gray-200 dark:bg-gray-700 h-[100px]">
             {/* Progress */}
             <motion.div 
               initial={{ height: 0 }}
