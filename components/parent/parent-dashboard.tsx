@@ -28,6 +28,8 @@ import { ParentChildListCard } from '@/components/parent/parent-child-list-card'
 import { ParentUpcomingTrip } from '@/components/parent/parent-upcoming-trip';
 import { FeaturedChildProfile } from '@/components/parent/featured-child-profile';
 
+import { useRegion } from '@/hooks/use-region';
+
 export function ParentDashboard() {
   const router = useRouter();
   const { user } = useAuth();
@@ -89,8 +91,50 @@ export function ParentDashboard() {
     router.push('/parent/children/1');
   };
 
+  const {
+    regions,
+    userRegion,
+    loading: loadingRegions,
+    dialogOpen,
+    setRegionForUser
+  } = useRegion();
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+
   return (
     <>
+      {/* Dialog de choix de région obligatoire */}
+      <Dialog open={dialogOpen} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choisissez votre région</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Région</label>
+              <select
+                className="w-full border rounded px-3 py-2"
+                value={selectedRegion || ''}
+                onChange={e => setSelectedRegion(e.target.value)}
+              >
+                <option value="" disabled>Choisissez une région</option>
+                {regions.map(region => (
+                  <option key={region.id} value={region.id}>{region.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-end">
+            <Button
+              type="button"
+              disabled={!selectedRegion}
+              onClick={() => selectedRegion && setRegionForUser(selectedRegion)}
+            >
+              Valider
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <motion.div
         variants={containerVariants}
         initial="hidden"

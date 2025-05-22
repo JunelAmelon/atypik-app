@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
-import { AddChildData } from '@/hooks/use-children';
+import { Child } from '@/hooks/use-children';
 
 const formSchema = z.object({
   firstName: z.string().min(2, 'Le prénom doit comporter au moins 2 caractères'),
@@ -39,13 +39,14 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface AddChildDialogProps {
+interface EditChildDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddChild?: (data: AddChildData) => void;
+  onEditChild?: (id: string, data: FormValues) => Promise<boolean>;
+  child: Child | null;
 }
 
-export function AddChildDialog({ open, onOpenChange, onAddChild }: AddChildDialogProps) {
+export function EditChildDialog({ open, onOpenChange, onEditChild, child }: EditChildDialogProps) {
   const { toast } = useToast();
   
   const form = useForm<FormValues>({
@@ -59,28 +60,53 @@ export function AddChildDialog({ open, onOpenChange, onAddChild }: AddChildDialo
     },
   });
 
+  // Mettre à jour les valeurs du formulaire lorsque l'enfant change
+  useEffect(() => {
+    if (child) {
+      form.reset({
+        firstName: child.firstName,
+        lastName: child.lastName,
+        age: child.age.toString(),
+        school: child.school,
+        specialNeeds: child.needs ? child.needs.join(', ') : '',
+      });
+    }
+  }, [child, form]);
+
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: FormValues) => {
     try {
-      // Simule un délai d'ajout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (onAddChild) {
-        onAddChild(data);
+      if (!child?.id || !onEditChild) {
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de modifier l\'enfant',
+          variant: 'destructive',
+        });
+        return;
       }
       
-      toast({
-        title: 'Enfant ajouté',
-        description: 'Le profil a été créé avec succès',
-      });
+      // Appeler la fonction de modification
+      const success = await onEditChild(child.id, data);
       
-      form.reset();
-      onOpenChange(false);
+      if (success) {
+        toast({
+          title: 'Enfant modifié',
+          description: 'Les informations ont été mises à jour avec succès',
+        });
+        
+        onOpenChange(false);
+      } else {
+        toast({
+          title: 'Erreur',
+          description: 'Une erreur est survenue lors de la modification',
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: 'Une erreur est survenue lors de l\'ajout',
+        description: 'Une erreur est survenue lors de la modification',
         variant: 'destructive',
       });
     }
@@ -90,9 +116,9 @@ export function AddChildDialog({ open, onOpenChange, onAddChild }: AddChildDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Ajouter un enfant</DialogTitle>
+          <DialogTitle>Modifier un enfant</DialogTitle>
           <DialogDescription>
-            Renseignez les informations de votre enfant pour créer son profil.
+            Modifiez les informations de l&apos;enfant.
           </DialogDescription>
         </DialogHeader>
 
@@ -190,7 +216,7 @@ export function AddChildDialog({ open, onOpenChange, onAddChild }: AddChildDialo
                     Enregistrement...
                   </>
                 ) : (
-                  'Ajouter'
+                  'Enregistrer'
                 )}
               </Button>
             </DialogFooter>

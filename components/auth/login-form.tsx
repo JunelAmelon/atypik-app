@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useAuth } from '@/lib/auth/auth-context';
+import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -33,7 +33,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle, isLoading, error, clearError } = useFirebaseAuth();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -56,11 +56,35 @@ export function LoginForm() {
         variant: 'default',
       });
     } catch (error) {
+      // L'erreur est déjà gérée dans le hook useFirebaseAuth
+      if (error) {
+        toast({
+          title: 'Erreur de connexion',
+          description: (error as any).message || 'Une erreur est survenue lors de la connexion',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    clearError();
+    try {
+      // Par défaut, on considère que c'est un parent qui se connecte
+      await loginWithGoogle('parent');
       toast({
-        title: 'Erreur de connexion',
-        description: 'Email ou mot de passe incorrect',
-        variant: 'destructive',
+        title: 'Connexion réussie',
+        description: 'Bienvenue sur Atypik Transport',
+        variant: 'default',
       });
+    } catch (error) {
+      if (error) {
+        toast({
+          title: 'Erreur de connexion avec Google',
+          description: (error as any).message || 'Une erreur est survenue lors de la connexion avec Google',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -157,51 +181,54 @@ export function LoginForm() {
           <div className="space-y-3">
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoading}
               className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md transition-all duration-300 hover:shadow-lg rounded-xl"
             >
-              Connexion
+              {isLoading ? (
+                <>
+                  <Loader size="sm" className="mr-2" />
+                  Connexion en cours...
+                </>
+              ) : (
+                'Connexion'
+              )}
             </Button>
-
-            <div className="pt-6 border-t mt-6">
-              <p className="text-sm text-muted-foreground mb-3 text-center">Accès rapide pour test</p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1 h-11 border-primary/30 hover:border-primary hover:bg-primary/5"
-                  onClick={() => {
-                    // Simuler un utilisateur parent pour le test
-                    localStorage.setItem('atypik_user', JSON.stringify({
-                      id: '1',
-                      email: 'parent@example.com',
-                      name: 'Marie Dubois',
-                      role: 'parent',
-                    }));
-                    window.location.href = '/parent/dashboard';
-                  }}
-                >
-                  Dashboard Parent
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1 h-11 border-primary/30 hover:border-primary hover:bg-primary/5"
-                  onClick={() => {
-                    // Simuler un utilisateur chauffeur pour le test
-                    localStorage.setItem('atypik_user', JSON.stringify({
-                      id: '2',
-                      email: 'driver@example.com',
-                      name: 'Thierry Bernard',
-                      role: 'driver',
-                    }));
-                    window.location.href = '/driver/dashboard';
-                  }}
-                >
-                  Dashboard Chauffeur
-                </Button>
+            
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-slate-200 dark:border-slate-700" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Ou Si vous avez déjà un compte continuez avec 
+                </span>
               </div>
             </div>
+            
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-base font-medium border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+            >
+              <svg
+                className="h-5 w-5 text-red-500"
+                aria-hidden="true"
+                focusable="false"
+                data-prefix="fab"
+                data-icon="google"
+                role="img"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 488 512"
+              >
+                <path
+                  fill="currentColor"
+                  d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
+                ></path>
+              </svg>
+              Continuer avec Google
+            </Button>
           </div>
         </form>
       </Form>

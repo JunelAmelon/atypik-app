@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,9 +26,14 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 
-import { UserRole, useAuth } from '@/lib/auth/auth-context';
+import { UserRole } from '@/lib/auth/auth-context';
+import { useRegion } from '@/hooks/use-region';
+import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronLeft, UserRound, Car } from 'lucide-react';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/firebase/ClientApp';
+
 
 const commonFieldsSchema = {
   firstName: z.string().min(2, 'Le prénom doit comporter au moins 2 caractères'),
@@ -50,8 +55,9 @@ const parentSchema = z.object({
 const driverSchema = z.object({
   ...commonFieldsSchema,
   licenseNumber: z.string().min(5, 'Numéro de permis trop court'),
-  insuranceNumber: z.string().min(5, 'Numéro d\'assurance trop court'),
+  insuranceNumber: z.string().min(5, "Numéro d'assurance trop court"),
   address: z.string().min(5, 'Adresse trop courte'),
+  regionId: z.string().min(1, 'La région est obligatoire'), // Champ requis
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',
   path: ['confirmPassword'],
@@ -62,7 +68,7 @@ type DriverFormValues = z.infer<typeof driverSchema>;
 
 export function RegisterForm() {
   const [selectedRole, setSelectedRole] = useState<UserRole>('parent');
-  const { register } = useAuth();
+  const { register, loginWithGoogle, isLoading, error, clearError } = useFirebaseAuth();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -91,6 +97,7 @@ export function RegisterForm() {
       address: '',
       password: '',
       confirmPassword: '',
+      regionId: '',
     },
   });
 
@@ -116,6 +123,22 @@ export function RegisterForm() {
 
   const onDriverSubmit = async (data: DriverFormValues) => {
     try {
+      if (regionStatus === 'verified') {
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de postuler sur une région déjà attribuée à un chauffeur validé.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (!data.regionId) {
+        toast({
+          title: 'Erreur',
+          description: 'Veuillez sélectionner une région.',
+          variant: 'destructive',
+        });
+        return;
+      }
       await register(data, 'driver');
       toast({
         title: 'Inscription réussie',
@@ -131,37 +154,97 @@ export function RegisterForm() {
     }
   };
 
+  const handleGoogleLogin = async (role: UserRole) => {
+    clearError();
+    try {
+      await loginWithGoogle(role);
+      toast({
+        title: 'Connexion réussie',
+        description: 'Vous êtes connecté avec Google',
+        variant: 'default',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur de connexion',
+        description: 'Une erreur est survenue lors de la connexion avec Google',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const { regions } = useRegion();
+  const [selectedRegionId, setSelectedRegionId] = useState('');
+  const [validatedDriver, setValidatedDriver] = useState<any | null>(null);
+  const [regionStatus, setRegionStatus] = useState<'free' | 'verified' | 'pending' | null>(null);
+
+  useEffect(() => {
+    if (!selectedRegionId) {
+      setValidatedDriver(null);
+      setRegionStatus(null);
+      return;
+    }
+
+    const fetchValidatedDriver = async () => {
+      const q = query(
+        collection(db, 'users'),
+        where('role', '==', 'driver'),
+        where('regionId', '==', selectedRegionId),
+        where('status', '==', 'validated')
+      );
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        setValidatedDriver(snapshot.docs[0].data());
+        setRegionStatus('verified');
+      } else {
+        const pendingQ = query(
+          collection(db, 'users'),
+          where('role', '==', 'driver'),
+          where('regionId', '==', selectedRegionId),
+          where('status', '==', 'pending')
+        );
+        const pendingSnapshot = await getDocs(pendingQ);
+        if (!pendingSnapshot.empty) {
+          setValidatedDriver(null);
+          setRegionStatus('pending');
+        } else {
+          setValidatedDriver(null);
+          setRegionStatus('free');
+        }
+      }
+    };
+
+    fetchValidatedDriver();
+  }, [selectedRegionId]);
+
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6 w-full"
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="max-w-md w-full mx-auto space-y-6 p-4 sm:p-6"
     >
-      <div className="space-y-2 text-center">
-        <h2 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">Inscription</h2>
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold">Inscription</h1>
         <p className="text-muted-foreground text-sm">
-          Créez votre compte en quelques clics
+          Créez votre compte pour accéder à l'application
         </p>
       </div>
 
-      <Tabs
-        defaultValue="parent"
-        onValueChange={(value) => setSelectedRole(value as UserRole)}
-      >
-        <TabsList className="grid grid-cols-2 mb-8 p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
-          <TabsTrigger value="parent" className="flex items-center gap-2 py-3 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-primary data-[state=active]:shadow-sm">
-            <UserRound size={18} />
+      <Tabs defaultValue="parent" className="w-full" onValueChange={(value) => setSelectedRole(value as UserRole)}>
+        <TabsList className="grid grid-cols-2 w-full h-14">
+          <TabsTrigger value="parent" className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-2">
+            <UserRound className="h-4 w-4" />
             <span>Parent</span>
           </TabsTrigger>
-          <TabsTrigger value="driver" className="flex items-center gap-2 py-3 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-primary data-[state=active]:shadow-sm">
-            <Car size={18} />
+          <TabsTrigger value="driver" className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-2">
+            <Car className="h-4 w-4" />
             <span>Chauffeur</span>
           </TabsTrigger>
         </TabsList>
 
         <AnimatePresence mode="wait">
-          <TabsContent value="parent" className="mt-6">
+          <TabsContent key="parent" value="parent" className="mt-6">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -231,10 +314,15 @@ export function RegisterForm() {
                     control={parentForm.control}
                     name="address"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="space-y-1.5">
                         <FormLabel className="text-sm font-medium">Adresse</FormLabel>
                         <FormControl>
-                          <Input placeholder="123 rue des Lilas, 75001 Paris" {...field} className="h-11 bg-background/50 border-input/50 focus:border-primary focus:ring-1 focus:ring-primary" />
+                          <div className="relative">
+                            <Input placeholder="123 rue des Lilas, 75001 Paris" {...field} className="h-12 pl-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200" />
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                            </div>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -272,20 +360,56 @@ export function RegisterForm() {
 
                   <Button
                     type="submit"
-                    disabled={isParentSubmitting}
+                    disabled={isParentSubmitting || isLoading}
                     className="w-full h-11 text-base mt-2 bg-primary hover:bg-primary/90 shadow-sm transition-all duration-200 hover:shadow-md"
                   >
-                    {isParentSubmitting ? (
+                    {isParentSubmitting || isLoading ? (
                       <Loader size="sm" className="mr-2" />
                     ) : null}
                     Créer mon compte
+                  </Button>
+
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-slate-200 dark:border-slate-700" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Ou continuer avec
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-11 text-base font-medium border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2"
+                    onClick={() => handleGoogleLogin('parent')}
+                    disabled={isLoading}
+                  >
+                    <svg
+                      className="h-5 w-5 text-red-500"
+                      aria-hidden="true"
+                      focusable="false"
+                      data-prefix="fab"
+                      data-icon="google"
+                      role="img"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 488 512"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
+                      ></path>
+                    </svg>
+                    Continuer avec Google
                   </Button>
                 </form>
               </Form>
             </motion.div>
           </TabsContent>
 
-          <TabsContent value="driver" className="mt-6">
+          <TabsContent key="driver" value="driver" className="mt-6">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -362,7 +486,7 @@ export function RegisterForm() {
                             <div className="relative">
                               <Input placeholder="123456789" {...field} className="h-12 pl-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200" />
                               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="14" x="3" y="5" rx="2"/><path d="M7 12h10"/><path d="M7 16h10"/><path d="M7 8h10"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="14" x="3" y="5" rx="2" /><path d="M7 12h10" /><path d="M7 16h10" /><path d="M7 8h10" /></svg>
                               </div>
                             </div>
                           </FormControl>
@@ -375,12 +499,12 @@ export function RegisterForm() {
                       name="insuranceNumber"
                       render={({ field }) => (
                         <FormItem className="space-y-1.5">
-                          <FormLabel className="text-sm font-medium">N° d&apos;assurance</FormLabel>
+                          <FormLabel className="text-sm font-medium">N° d'assurance</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input placeholder="987654321" {...field} className="h-12 pl-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200" />
                               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" /><path d="M13 5v2" /><path d="M13 17v2" /><path d="M13 11v2" /></svg>
                               </div>
                             </div>
                           </FormControl>
@@ -392,6 +516,41 @@ export function RegisterForm() {
 
                   <FormField
                     control={driverForm.control}
+                    name="regionId"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-sm font-medium">Région</FormLabel>
+                        <FormControl>
+                          <select
+                            {...field}
+                            className="h-12 w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-primary"
+                            value={selectedRegionId}
+                            onChange={e => {
+                              setSelectedRegionId(e.target.value);
+                              field.onChange(e);
+                            }}
+                          >
+                            <option value="">Sélectionnez une région</option>
+                            {regions.map(region => (
+                              <option key={region.id} value={region.id}>{region.name}</option>
+                            ))}
+                          </select>
+                        </FormControl>
+                        {regionStatus === 'verified' && (
+                          <div className="text-red-500 text-xs mt-1">
+                            Cette région a déjà un chauffeur validé ({validatedDriver?.displayName ?? 'Chauffeur'}). Veuillez en choisir une autre.
+                          </div>
+                        )}
+                        {regionStatus === 'pending' && (
+                          <div className="text-yellow-600 text-xs mt-1">
+                            Un chauffeur est déjà en attente de validation sur cette région. Vous pouvez tout de même postuler.
+                          </div>
+                        )}
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={driverForm.control}
                     name="address"
                     render={({ field }) => (
                       <FormItem className="space-y-1.5">
@@ -400,7 +559,7 @@ export function RegisterForm() {
                           <div className="relative">
                             <Input placeholder="123 rue des Lilas, 75001 Paris" {...field} className="h-12 pl-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200" />
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
                             </div>
                           </div>
                         </FormControl>
@@ -440,10 +599,10 @@ export function RegisterForm() {
 
                   <Button
                     type="submit"
-                    disabled={isDriverSubmitting}
+                    disabled={isDriverSubmitting || isLoading}
                     className="w-full h-11 text-base mt-2 bg-primary hover:bg-primary/90 shadow-sm transition-all duration-200 hover:shadow-md"
                   >
-                    {isDriverSubmitting ? (
+                    {isDriverSubmitting || isLoading ? (
                       <Loader size="sm" className="mr-2" />
                     ) : null}
                     Soumettre ma candidature

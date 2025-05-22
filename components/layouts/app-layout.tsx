@@ -6,6 +6,7 @@ import { Logo } from '@/components/logo';
 import { ModeToggle } from '@/components/mode-toggle';
 import { AuthGuard } from '@/lib/auth/auth-guard';
 import { UserRole, useAuth } from '@/lib/auth/auth-context';
+import DriverPending from '@/components/driver/driver-pending';
 import { 
   Bell, 
   LogOut,
@@ -74,6 +75,11 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
 
   if (!isMounted) {
     return null;
+  }
+
+  // Afficher la page "pending" pour les chauffeurs en attente de validation
+  if (user?.role === 'driver' && user?.status === 'pending') {
+    return <DriverPending />;
   }
 
   return (

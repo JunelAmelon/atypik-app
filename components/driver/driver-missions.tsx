@@ -7,49 +7,59 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MapPin, Search, Filter, Clock, User, AlertTriangle } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
+
+
+import { useAuth } from '@/lib/auth/auth-context';
+import { useMissions } from '@/hooks/use-missions';
 
 export function DriverMissions() {
   const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth();
+  const driverId = user?.id;
+  const { missions, loading, error, refresh } = useMissions(driverId || '');
 
-  // Mock missions data
-  const missions = [
-    {
-      id: '1',
-      status: 'pending',
-      time: '08:30',
-      child: {
-        name: 'Lucas Dubois',
-        age: 8,
-        needs: ['TDAH', 'Allergie gluten']
-      },
-      from: {
-        name: 'Domicile',
-        address: '123 rue des Lilas, Paris'
-      },
-      to: {
-        name: 'École Montessori',
-        address: '45 avenue Victor Hugo, Paris'
-      }
-    },
-    {
-      id: '2',
-      status: 'completed',
-      time: '16:30',
-      child: {
-        name: 'Emma Martin',
-        age: 7,
-        needs: ['Anxiété']
-      },
-      from: {
-        name: 'École Montessori',
-        address: '45 avenue Victor Hugo, Paris'
-      },
-      to: {
-        name: 'Centre de loisirs',
-        address: '12 rue des Sports, Paris'
-      }
-    }
-  ];
+  // Dialog state
+  const [openNeeds, setOpenNeeds] = useState(false);
+  const [openDetails, setOpenDetails] = useState(false);
+  const [selectedMission, setSelectedMission] = useState<any>(null);
+
+  const handleShowNeeds = (mission: any) => {
+    setSelectedMission(mission);
+    setOpenNeeds(true);
+  };
+
+  const handleShowDetails = (mission: any) => {
+    setSelectedMission(mission);
+    setOpenDetails(true);
+  };
+
+  const handleCloseDialogs = () => {
+    setOpenNeeds(false);
+    setOpenDetails(false);
+    setSelectedMission(null);
+  };
+
+  // Affichage si non connecté
+  if (!driverId) {
+    return <div className="p-8 text-center text-red-500">Veuillez vous connecter en tant que chauffeur.</div>;
+  }
+
+  // Affichage du chargement
+  if (loading) {
+    return <div className="p-8 text-center">Chargement des missions...</div>;
+  }
+
+  // Affichage de l'erreur
+  if (error) {
+    return <div className="p-8 text-center text-red-500">{error}</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -96,21 +106,15 @@ export function DriverMissions() {
                     className="flex items-start gap-4 p-4 bg-secondary/50 rounded-lg"
                   >
                     <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary font-medium">
-                      {mission.time}
+                      {(mission as any).time}
                     </div>
-                    
+
                     <div className="flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-primary" />
-                          <h4 className="font-medium">
-                            {mission.child.name} ({mission.child.age} ans)
-                          </h4>
-                        </div>
-                        <Button variant="secondary" size="sm" className="h-7 text-xs bg-primary/10 text-primary hover:bg-primary/20">
-                          <AlertTriangle className="h-3 w-3 mr-1 text-primary" />
-                          Voir besoins
-                        </Button>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-primary" />
+                        <h4 className="font-medium">
+                          {mission.child.name} ({mission.child.age} ans)
+                        </h4>
                       </div>
 
                       <div className="flex flex-wrap gap-1 mt-2">
@@ -124,7 +128,7 @@ export function DriverMissions() {
                           </Badge>
                         ))}
                       </div>
-                      
+
                       <div className="mt-3 space-y-2">
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="h-4 w-4 text-primary" />
@@ -146,13 +150,35 @@ export function DriverMissions() {
                         </div>
                       </div>
 
-                      <div className="flex justify-end mt-3">
-                        <Button
-                          size="sm"
-                          className="text-xs bg-primary hover:bg-primary/90"
-                        >
-                          Voir détails
-                        </Button>
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="text-xs text-muted-foreground">
+                          <Clock className="inline mr-1 h-4 w-4 align-middle" />
+                          {mission.date && (typeof mission.date.toDate === 'function'
+                            ? mission.date.toDate().toLocaleDateString('fr-FR')
+                            : new Date(mission.date.toDate()).toLocaleDateString('fr-FR'))}
+                        </div>
+                        <div className="relative">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 p-0">
+                                <span className="sr-only">Ouvrir menu</span>
+                                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2" fill="currentColor" /><circle cx="12" cy="12" r="2" fill="currentColor" /><circle cx="19" cy="12" r="2" fill="currentColor" /></svg>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onSelect={() => handleShowDetails(mission)}>
+                                Voir détails
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleShowNeeds(mission)}>
+                                Voir besoins
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onSelect={() => {/* TODO: commencer le trajet */ }}>
+                                Commencer le trajet
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -161,16 +187,16 @@ export function DriverMissions() {
 
             <TabsContent value="completed" className="space-y-4">
               {missions
-                .filter(m => m.status === 'completed')
+                .filter(m => m.status === 'done')
                 .map(mission => (
                   <div
                     key={mission.id}
                     className="flex items-start gap-4 p-4 bg-secondary/50 rounded-lg opacity-75"
                   >
                     <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary font-medium">
-                      {mission.time}
+                      {(mission as any).time}
                     </div>
-                    
+
                     <div className="flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
@@ -195,7 +221,7 @@ export function DriverMissions() {
                           </Badge>
                         ))}
                       </div>
-                      
+
                       <div className="mt-3 space-y-2">
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="h-4 w-4 text-primary" />
@@ -233,6 +259,56 @@ export function DriverMissions() {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
+
+      {/* Modal Besoins */}
+      {openNeeds && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
+            <h2 className="text-lg font-bold mb-2">Besoins de l'enfant</h2>
+            <div className="py-2 mb-4">
+              {selectedMission?.child?.needs && selectedMission.child.needs.length > 0 ? (
+                <ul className="list-disc pl-5">
+                  {selectedMission.child.needs.map((need: string, i: number) => (
+                    <li key={i}>{need}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>Aucun besoin particulier.</p>
+              )}
+            </div>
+            <button
+              className="mt-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+              onClick={handleCloseDialogs}
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Détails */}
+      {openDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
+            <h2 className="text-lg font-bold mb-2">Détails du transport</h2>
+            <div className="py-2 space-y-2 mb-4">
+              <div><b>Parent:</b> {selectedMission?.parentName || 'N/A'}</div>
+              <div><b>Enfant:</b> {selectedMission?.child?.name || 'N/A'}</div>
+              <div><b>Âge:</b> {selectedMission?.child?.age || 'N/A'} ans</div>
+              <div><b>Besoins:</b> {selectedMission?.child?.needs && selectedMission.child.needs.length > 0 ? selectedMission.child.needs.join(', ') : 'Aucun'}</div>
+              <div><b>Date:</b> {selectedMission?.date && (typeof selectedMission.date.toDate === 'function' ? selectedMission.date.toDate().toLocaleDateString('fr-FR') : new Date(selectedMission.date).toLocaleDateString('fr-FR'))}</div>
+              <div><b>Départ:</b> {selectedMission?.from?.name} — {selectedMission?.from?.address}</div>
+              <div><b>Arrivée:</b> {selectedMission?.to?.name} — {selectedMission?.to?.address}</div>
+            </div>
+            <button
+              className="mt-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+              onClick={handleCloseDialogs}
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
+    </div >
   );
 }

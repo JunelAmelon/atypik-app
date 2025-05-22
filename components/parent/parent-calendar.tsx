@@ -4,74 +4,63 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { TransportEventDialog } from './transport-event-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useTransport, TransportEvent } from '@/hooks/use-transport';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarPlus, ChevronLeft, ChevronRight, Info, Bus } from 'lucide-react';
-
-// Type pour les événements de transport
-type TransportEvent = {
-  id: string;
-  childId: string;
-  childName: string;
-  date: Date;
-  time: string;
-  transportType: 'aller' | 'retour' | 'aller-retour';
-};
+import { CalendarPlus, Info, Bus } from 'lucide-react';
 
 export function ParentCalendar() {
+  // Fonction utilitaire pour vérifier si une date est passée sans modifier l'objet Date original
+  const isDatePast = useCallback((dateToCheck: Date | undefined): boolean => {
+    if (!dateToCheck) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dateToCompare = new Date(dateToCheck);
+    dateToCompare.setHours(0, 0, 0, 0);
+    return dateToCompare < today;
+  }, []);
+  
   const { toast } = useToast();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
-  const [transportEvents, setTransportEvents] = useState<TransportEvent[]>([]);
+  const [selectedTransportDate, setSelectedTransportDate] = useState<Date | undefined>(new Date());
   
-  // Données fictives pour la démo
-  const mockChildren = [
-    { id: '1', name: 'Lucas Dubois' },
-    { id: '2', name: 'Léa Dubois' },
-  ];
+  // Utiliser le hook useTransport
+  const { 
+    transportEvents, 
+    loading, 
+    error, 
+    addTransport, 
+    getTransportsForDate, 
+    hasTransportsOnDate 
+  } = useTransport();
   
   // Fonction pour ajouter un nouvel événement de transport
-  const handleAddEvent = (data: any) => {
-    const childName = mockChildren.find(child => child.id === data.childId)?.name || 'Enfant';
-    
-    const newEvent: TransportEvent = {
-      id: `${Date.now()}`, // ID unique basé sur le timestamp
+  const handleAddEvent = async (data: any) => {
+    const result = await addTransport({
       childId: data.childId,
-      childName,
+      childName: data.childName,
       date: data.date,
       time: data.time,
       transportType: data.transportType,
-    };
-    
-    setTransportEvents([...transportEvents, newEvent]);
-    
-    toast({
-      title: 'Transport programmé',
-      description: `Transport ${data.transportType} ajouté pour ${childName} le ${format(data.date, 'dd/MM/yyyy')} à ${data.time}`,
+      from: data.from,
+      to: data.to,
     });
-  };
-  
-  // Fonction pour vérifier si une date a des événements
-  const hasEventsOnDate = (date: Date) => {
-    return transportEvents.some(event => {
-      const eventDate = new Date(event.date);
-      return eventDate.getDate() === date.getDate() && 
-             eventDate.getMonth() === date.getMonth() && 
-             eventDate.getFullYear() === date.getFullYear();
-    });
-  };
-  
-  // Fonction pour obtenir les événements d'une date spécifique
-  const getEventsForDate = (date: Date) => {
-    return transportEvents.filter(event => {
-      const eventDate = new Date(event.date);
-      return eventDate.getDate() === date.getDate() && 
-             eventDate.getMonth() === date.getMonth() && 
-             eventDate.getFullYear() === date.getFullYear();
-    });
+
+    if (result) {
+      return {
+        success: true,
+        message: `Transport ${data.transportType} ajouté pour ${data.childName} le ${format(data.date, 'dd/MM/yyyy')} à ${data.time}`,
+      };
+    } else {
+      return {
+        success: false,
+        message: `Le transport n'a pas pu être ajouté (aucun chauffeur disponible ou erreur).`,
+      };
+    }
   };
 
   return (
@@ -86,7 +75,11 @@ export function ParentCalendar() {
         
         <Button 
           className="bg-primary hover:bg-primary/90 h-9 sm:h-10 text-xs sm:text-sm w-full sm:w-auto max-w-[250px]"
-          onClick={() => setIsEventDialogOpen(true)}
+          onClick={() => {
+            setSelectedTransportDate(date);
+            setIsEventDialogOpen(true);
+          }}
+          disabled={isDatePast(date)}
         >
           <CalendarPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
           Programmer un transport
@@ -107,10 +100,12 @@ export function ParentCalendar() {
                   onSelect={setDate}
                   className="rounded-md border mx-auto"
                   modifiers={{
-                    hasEvent: (date) => hasEventsOnDate(date),
+                    hasEvent: (date) => hasTransportsOnDate(date),
+                    past: (date) => isDatePast(date)
                   }}
                   modifiersClassNames={{
                     hasEvent: 'bg-primary/10 font-semibold text-primary relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full',
+                    past: 'text-muted-foreground opacity-50'
                   }}
                 />
               </div>
@@ -132,9 +127,13 @@ export function ParentCalendar() {
             </div>
           </CardHeader>
           <CardContent>
-            {date && getEventsForDate(date).length > 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : date && getTransportsForDate(date).length > 0 ? (
               <div className="space-y-3">
-                {getEventsForDate(date).map((event) => (
+                {getTransportsForDate(date).map((event) => (
                   <div key={event.id} className="p-3 rounded-lg border bg-background/50">
                     <div className="flex items-start gap-3">
                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
@@ -169,7 +168,11 @@ export function ParentCalendar() {
                   variant="outline" 
                   size="sm" 
                   className="mt-4"
-                  onClick={() => setIsEventDialogOpen(true)}
+                  onClick={() => {
+                    setSelectedTransportDate(date);
+                    setIsEventDialogOpen(true);
+                  }}
+                  disabled={isDatePast(date)}
                 >
                   <CalendarPlus className="h-3.5 w-3.5 mr-1.5" />
                   Programmer
@@ -184,9 +187,11 @@ export function ParentCalendar() {
       <TransportEventDialog 
         open={isEventDialogOpen} 
         onOpenChange={setIsEventDialogOpen}
-        selectedDate={date || new Date()}
+        selectedDate={selectedTransportDate || new Date()}
         onAddEvent={handleAddEvent}
+        key={selectedTransportDate?.toISOString()} // Forcer la réinitialisation du composant quand la date change
       />
     </div>
+
   );
 }
