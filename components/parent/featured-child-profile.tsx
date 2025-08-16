@@ -10,32 +10,17 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
 interface FeaturedChildProfileProps {
-  onViewDetails?: () => void;
+  child?: any;
+  loading?: boolean;
 }
 
-export function FeaturedChildProfile({ onViewDetails }: FeaturedChildProfileProps) {
+export function FeaturedChildProfile({ child, loading = false }: FeaturedChildProfileProps) {
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(false);
   
-  // Données fictives pour le profil enfant du jour
-  const child = {
-    id: '1',
-    name: 'Lucas Dubois',
-    age: 8,
-    school: 'École Montessori Étoile',
-    avatar: null,
-    achievements: [
-      { id: '1', title: 'Premier jour d\'école', date: '15/09/2024' },
-      { id: '2', title: '10 trajets sans retard', date: '05/10/2024' },
-    ],
-    nextEvent: {
-      title: 'Transport école',
-      date: 'Lundi 12 mai',
-      time: '08:15'
-    }
-  };
-  
   const handleLike = () => {
+    if (!child) return;
+    
     setIsLiked(!isLiked);
     
     toast({
@@ -43,106 +28,119 @@ export function FeaturedChildProfile({ onViewDetails }: FeaturedChildProfileProp
       description: isLiked ? `${child.name} a été retiré de vos favoris` : `${child.name} a été ajouté à vos favoris`,
     });
   };
-  
-  const handleViewDetails = () => {
-    if (onViewDetails) {
-      onViewDetails();
-    } else {
-      // Navigation alternative si la prop n'est pas fournie
-      toast({
-        title: 'Détails du profil',
-        description: `Affichage des détails du profil de ${child.name}`,
-      });
-    }
-  };
+
+  if (loading) {
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              <span>Enfant du jour</span>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!child) {
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              <span>Enfant du jour</span>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <User className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Aucun enfant sélectionné</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="overflow-hidden border-0 shadow-md bg-gradient-to-br from-card to-background">
-      <CardHeader className="pb-0 pt-6">
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/20">
-              <Award className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            </div>
-            <span className="text-base font-bold">Profil enfant du jour</span>
+            <User className="h-5 w-5 text-primary" />
+            <span>Enfant du jour</span>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={`h-8 w-8 rounded-full ${isLiked ? 'text-rose-500 hover:text-rose-600' : 'text-muted-foreground hover:text-foreground'}`}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-8 w-8 p-0 ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}
             onClick={handleLike}
           >
-            <Heart className={`h-4 w-4 ${isLiked ? 'fill-rose-500' : ''}`} />
+            <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
           </Button>
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="pt-4 pb-6">
-        <div className="flex flex-col items-center text-center mb-5">
-          <Avatar className="h-20 w-20 mb-3 border-2 border-amber-200 dark:border-amber-800">
+      <CardContent className="space-y-4">
+        <div className="flex items-start gap-4">
+          <Avatar className="h-16 w-16">
             <AvatarImage src={child.avatar || undefined} alt={child.name} />
-            <AvatarFallback className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-xl font-semibold">
-              {child.name.charAt(0)}
+            <AvatarFallback className="text-lg bg-primary/10 text-primary">
+              {child.name?.split(' ').map((n: string) => n[0]).join('') || 'E'}
             </AvatarFallback>
           </Avatar>
           
-          <h3 className="text-lg font-semibold">{child.name}</h3>
-          <p className="text-sm text-muted-foreground">{child.age} ans</p>
-          
-          <div className="flex items-center gap-1.5 mt-2">
-            <School className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs">{child.school}</span>
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          <div className="bg-secondary/40 rounded-lg p-3">
-            <h4 className="text-xs font-medium flex items-center gap-1.5 mb-2">
-              <Award className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-              <span>Dernières réalisations</span>
-            </h4>
+          <div className="flex-1 space-y-1">
+            <h3 className="text-lg font-semibold">{child.name}</h3>
+            <p className="text-sm text-muted-foreground">
+              {child.age} ans • {child.school}
+            </p>
             
-            <div className="space-y-2">
-              {child.achievements.map((achievement) => (
-                <div key={achievement.id} className="flex items-center justify-between">
-                  <p className="text-xs font-medium">{achievement.title}</p>
-                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">
-                    {achievement.date}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="bg-secondary/40 rounded-lg p-3">
-            <h4 className="text-xs font-medium flex items-center gap-1.5 mb-2">
-              <Calendar className="h-3.5 w-3.5 text-primary" />
-              <span>Prochain transport</span>
-            </h4>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium">{child.nextEvent.title}</p>
-                <p className="text-[10px] text-muted-foreground">{child.nextEvent.date} · {child.nextEvent.time}</p>
+            {child.nextTransport && (
+              <div className="flex items-center gap-2 pt-2">
+                <Badge variant="secondary" className="text-xs">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  {child.nextTransport.date}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {child.nextTransport.time}
+                </Badge>
               </div>
-              <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px]">
-                <Calendar className="h-3 w-3 mr-1" />
-                Détails
-              </Button>
-            </div>
+            )}
           </div>
         </div>
         
-        <div className="mt-5">
-          <Button 
-            className="w-full text-xs h-9 gap-1"
-            onClick={handleViewDetails}
-          >
-            <User className="h-3.5 w-3.5" />
-            Voir le profil complet
-            <ChevronRight className="h-3.5 w-3.5 ml-1" />
-          </Button>
-        </div>
+        {child.stats && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium flex items-center gap-2">
+                <Award className="h-4 w-4 text-primary" />
+                Statistiques
+              </h4>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2 bg-secondary/50 rounded-lg text-center">
+                <p className="text-lg font-semibold text-primary">{child.stats.totalTrips || 0}</p>
+                <p className="text-xs text-muted-foreground">Trajets</p>
+              </div>
+              <div className="p-2 bg-secondary/50 rounded-lg text-center">
+                <p className="text-lg font-semibold text-green-600">{child.stats.completedTrips || 0}</p>
+                <p className="text-xs text-muted-foreground">Terminés</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+
       </CardContent>
     </Card>
   );

@@ -28,7 +28,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useChildren } from '@/hooks/use-children';
-import { GoogleAddressAutocomplete } from '@/components/ui/google-address-autocomplete';
+import { useAuth } from '@/lib/auth/auth-context';
+import { AddressSelector } from '@/components/ui/address-selector';
 
 // Fonction pour comparer les dates sans tenir compte de l'heure
 const isSameOrAfterToday = (date: Date) => {
@@ -114,6 +115,7 @@ export function TransportEventDialog({
   // pour afficher la date correcte dans le dialogue, mais empêcher la soumission si c'est une date passée
   const { toast } = useToast();
   const { children, isLoading: loadingChildren } = useChildren();
+  const { user } = useAuth();
   
   const [from, setFrom] = useState<{ address: string; lat: number; lng: number; placeId?: string } | null>(null);
   const [to, setTo] = useState<{ address: string; lat: number; lng: number; placeId?: string } | null>(null);
@@ -157,11 +159,14 @@ export function TransportEventDialog({
       },
       (response, status) => {
         if (status === 'OK' && response && response.rows[0]?.elements[0]?.status === 'OK') {
-          setDistance(response.rows[0].elements[0].distance.value); // en mètres
-          form.setValue('distance', response.rows[0].elements[0].distance.value);
+          const distanceValue = response.rows[0].elements[0].distance.value; // en mètres
+          setDistance(distanceValue);
+          form.setValue('distance', distanceValue);
+          console.log('Distance calculée:', distanceValue, 'm');
         } else {
+          console.log('Erreur calcul distance:', status, response);
           setDistance(null);
-          form.setValue('distance', undefined);
+          form.setValue('distance', 0); // Utiliser 0 au lieu de undefined
         }
       }
     );
@@ -185,18 +190,61 @@ export function TransportEventDialog({
       const selectedChild = children?.find(child => child.id === data.childId);
       const childName = selectedChild ? `${selectedChild.firstName} ${selectedChild.lastName}` : 'Enfant';
 
-      if (!from || !to || !distance) {
+      if (!from || !to) {
         toast({ title: 'Adresse manquante', description: 'Merci de renseigner le lieu de départ et d\'arrivée valides.' });
+        return;
+      }
+      
+      // Vérifier que la distance a été calculée
+      if (distance === null || distance === undefined) {
+        toast({ title: 'Distance non calculée', description: 'Veuillez attendre le calcul de la distance ou vérifier les adresses.' });
         return;
       }
 
       if (onAddEvent) {
-        const result = await onAddEvent({ ...data, childName, from, to, distance });
+        // Utiliser la distance calculée (qui peut être 0 pour des adresses très proches)
+        const transportData = {
+          ...data,
+          childName,
+          from,
+          to,
+          distance: distance // Utiliser directement la distance calculée
+        };
+        
+        console.log('Données envoyées:', transportData); // Debug
+        const result = await onAddEvent(transportData);
         if (result && (result as any).success) {
           toast({
             title: 'Transport programmé',
             description: (result as any).message || 'Le transport a été ajouté au calendrier',
           });
+
+          // Envoyer une notification push au chauffeur sélectionné (best effort)
+          try {
+            if (user?.selectedDriverId) {
+              const notifTitle = 'Transport programmé';
+              const notifBody = `${childName} • ${data.transportType} le ${format(data.date, 'dd/MM/yyyy', { locale: fr })} à ${data.time}`;
+              await fetch('/api/notifications/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: user.selectedDriverId,
+                  title: notifTitle,
+                  body: notifBody,
+                  data: {
+                    type: 'transport',
+                    childId: data.childId,
+                    date: data.date.toISOString(),
+                    time: data.time,
+                    transportType: data.transportType,
+                  },
+                }),
+              });
+            }
+          } catch (e) {
+            console.error('Erreur envoi notification push:', e);
+          }
+
           form.reset();
           setFrom(null); setTo(null); setDistance(null);
           onOpenChange(false);
@@ -288,9 +336,9 @@ export function TransportEventDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="aller-retour">Aller-Retour</SelectItem>
                       <SelectItem value="aller">Aller (matin)</SelectItem>
                       <SelectItem value="retour">Retour (après-midi)</SelectItem>
-                      <SelectItem value="aller-retour">Aller-retour</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -313,31 +361,40 @@ export function TransportEventDialog({
             />
 
             {/* Champ Lieu de départ */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Lieu de départ</label>
-              <GoogleAddressAutocomplete
-                value={from?.address || ''}
-                onChange={val => setFrom(val ? { address: val, lat: 0, lng: 0 } : null)}
-                onSelect={res => setFrom(res)}
-                placeholder="Adresse de départ"
-                restrictRegion={process.env.NEXT_PUBLIC_REGION_CODE || 'FR'}
-                disabled={!mapsLoaded}
-              />
-              {from && from.address && <div className="text-xs text-muted-foreground mt-1">{from.address}</div>}
-            </div>
-            {/* Champ Lieu d'arrivée */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Lieu d'arrivée</label>
-              <GoogleAddressAutocomplete
-                value={to?.address || ''}
-                onChange={val => setTo(val ? { address: val, lat: 0, lng: 0 } : null)}
-                onSelect={res => setTo(res)}
-                placeholder="Adresse d'arrivée (France)"
-                restrictRegion={'FR'}
-                disabled={!mapsLoaded}
-              />
-              {to && to.address && <div className="text-xs text-muted-foreground mt-1">{to.address}</div>}
-            </div>
+            <AddressSelector
+              value={from?.address || ''}
+              onChange={val => {
+                const newFrom = val ? { address: val, lat: 0, lng: 0 } : null;
+                setFrom(newFrom);
+                form.setValue('from', newFrom || { address: '', lat: 0, lng: 0 });
+              }}
+              onSelect={res => {
+                setFrom(res);
+                form.setValue('from', res);
+              }}
+              placeholder="Adresse de départ"
+              restrictRegion={process.env.NEXT_PUBLIC_REGION_CODE || 'FR'}
+              disabled={!mapsLoaded}
+              label="Lieu de départ"
+            />
+            
+            {/* Champ Lieu d&apos;arrivée */}
+            <AddressSelector
+              value={to?.address || ''}
+              onChange={val => {
+                const newTo = val ? { address: val, lat: 0, lng: 0 } : null;
+                setTo(newTo);
+                form.setValue('to', newTo || { address: '', lat: 0, lng: 0 });
+              }}
+              onSelect={res => {
+                setTo(res);
+                form.setValue('to', res);
+              }}
+              placeholder="Adresse d&apos;arrivée (France)"
+              restrictRegion="FR"
+              disabled={!mapsLoaded}
+              label="Lieu d&apos;arrivée"
+            />
             {/* Distance affichée */}
             {distance !== null && distance !== undefined && (
               <div className="text-sm text-primary mt-2">

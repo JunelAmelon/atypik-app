@@ -35,6 +35,7 @@ const formSchema = z.object({
   }),
   school: z.string().min(2, 'Le nom de l\'école est requis'),
   specialNeeds: z.string().optional(),
+  personality: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -56,6 +57,7 @@ export function AddChildDialog({ open, onOpenChange, onAddChild }: AddChildDialo
       age: '',
       school: '',
       specialNeeds: '',
+      personality: '',
     },
   });
 
@@ -146,9 +148,9 @@ export function AddChildDialog({ open, onOpenChange, onAddChild }: AddChildDialo
                 name="school"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>École</FormLabel>
+                    <FormLabel>Nom du centre hospitalier</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nom de l'école" {...field} />
+                      <Input placeholder="Nom du centre hospitalier" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,6 +167,24 @@ export function AddChildDialog({ open, onOpenChange, onAddChild }: AddChildDialo
                   <FormControl>
                     <Textarea 
                       placeholder="Ex: Allergies, médicaments, besoins particuliers..." 
+                      className="resize-none" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="personality"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Personnalité de l'enfant (optionnel)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Ex: Timide, extraverti, curieux, calme, énergique..." 
                       className="resize-none" 
                       {...field} 
                     />

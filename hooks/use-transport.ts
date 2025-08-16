@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useRegion } from './use-region';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useToast } from './use-toast';
 import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where, Timestamp } from 'firebase/firestore';
@@ -27,18 +26,18 @@ export type TransportEvent = {
     lng: number;
     placeId?: string;
   };
-  distance?: number; // en mètres
+  distance: number; // en mètres (obligatoire, 0 par défaut)
+  status: 'programmed' | 'in-progress' | 'completed' | 'cancelled'; // Statut du transport
 };
 
 // Type pour les données d'ajout de transport
-export type AddTransportData = Omit<TransportEvent, 'id' | 'userId' | 'driverId'>; // driverId est déterminé automatiquement
+export type AddTransportData = Omit<TransportEvent, 'id' | 'userId'>; // driverId est fourni par le parent
 
 // Type pour les données de mise à jour de transport
 export type UpdateTransportData = Omit<TransportEvent, 'id' | 'userId'>;
 
 export function useTransport() {
   const { user } = useAuth();
-  const { userRegion } = useRegion();
   const { toast } = useToast();
   const [transportEvents, setTransportEvents] = useState<TransportEvent[]>([]);
   const [loading, setLoading] = useState(false);
@@ -71,6 +70,7 @@ export function useTransport() {
           from: data.from || { address: '', lat: 0, lng: 0 },
           to: data.to || { address: '', lat: 0, lng: 0 },
           distance: data.distance,
+          status: data.status || 'programmed', // Ajouter le statut avec fallback
         });
       });
 
@@ -92,10 +92,10 @@ export function useTransport() {
   // Ajouter un nouveau transport
   const addTransport = useCallback(async (data: AddTransportData) => {
     if (!user?.id) return null;
-    if (!userRegion?.driverId || userRegion.driverId === "") {
+    if (!data.driverId || data.driverId === "") {
       toast({
-        title: 'Aucun chauffeur disponible',
-        description: 'Aucun chauffeur n\'est actuellement disponible dans votre région. Veuillez réessayer plus tard ou contacter l\'administration.',
+        title: 'Chauffeur requis',
+        description: 'Vous devez sélectionner un chauffeur avant de programmer un transport.',
         variant: 'destructive',
       });
       return null;
@@ -106,15 +106,23 @@ export function useTransport() {
 
     try {
       const transportRef = collection(db, 'transports');
+      // S'assurer que tous les champs obligatoires sont présents et valides
+      console.log('Données reçues dans addTransport:', data);
+      console.log('Distance reçue:', data.distance, typeof data.distance);
+      
       const newTransport = {
         ...data,
         userId: user.id,
-        driverId: userRegion.driverId, // driverId déterminé automatiquement
+        driverId: data.driverId, // driverId fourni par le parent
         date: Timestamp.fromDate(data.date), // Convertir Date en Timestamp pour Firestore
         from: data.from,
         to: data.to,
-        distance: data.distance,
+        distance: data.distance ?? 0, // S'assurer que distance n'est jamais undefined
+        status: 'programmed', // Statut par défaut
       };
+      
+      console.log('Transport à enregistrer dans Firestore:', newTransport);
+      console.log('Distance finale:', newTransport.distance);
 
       const docRef = await addDoc(transportRef, newTransport);
       
@@ -128,7 +136,7 @@ export function useTransport() {
         ...data,
         id: docRef.id,
         userId: user.id,
-        driverId: userRegion.driverId,
+        driverId: data.driverId,
       };
     } catch (err) {
       console.error('Erreur lors de l\'ajout du transport:', err);
@@ -142,7 +150,7 @@ export function useTransport() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, userRegion, toast, loadTransports]);
+  }, [user?.id, toast, loadTransports]);
 
   // Mettre à jour un transport existant
   const updateTransport = useCallback(async (id: string, data: UpdateTransportData) => {
@@ -243,6 +251,54 @@ export function useTransport() {
     });
   }, [transportEvents]);
 
+  // Ajouter une évaluation avec commentaire à un transport (dans la collection reviews)
+  const addTransportComment = useCallback(async (transportId: string, rating: number, comment: string) => {
+    if (!user?.id || !comment.trim() || rating < 1 || rating > 5) return false;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Trouver le transport pour récupérer le childId
+      const transport = transportEvents.find(t => t.id === transportId);
+      if (!transport) {
+        throw new Error('Transport non trouvé');
+      }
+
+      // Créer un document de review dans la collection reviews
+      const reviewsRef = collection(db, 'reviews');
+      await addDoc(reviewsRef, {
+        transportId,
+        childId: transport.childId,
+        userId: user.id,
+        parentId: user.id,
+        driverId: transport.driverId,
+        comment: comment.trim(),
+        rating: rating, // Note obligatoire
+        createdAt: Timestamp.now(),
+        type: 'given', // Le parent donne une évaluation
+      });
+
+      toast({
+        title: 'Évaluation ajoutée',
+        description: 'Votre évaluation a été enregistrée avec succès.',
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Erreur lors de l\'ajout de l\'évaluation:', err);
+      setError('Impossible d\'ajouter l\'évaluation');
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'ajouter l\'évaluation',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, toast, transportEvents]);
+
   // Charger les transports au montage du composant
   useEffect(() => {
     if (user?.id) {
@@ -258,6 +314,7 @@ export function useTransport() {
     addTransport,
     updateTransport,
     deleteTransport,
+    addTransportComment,
     getTransportsForDate,
     hasTransportsOnDate,
   };

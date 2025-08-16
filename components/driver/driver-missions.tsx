@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Search, Filter, Clock, User, AlertTriangle } from 'lucide-react';
+import { MapPin, Search, Filter, Clock, User, AlertTriangle, Navigation, X, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -18,16 +19,20 @@ import {
 
 import { useAuth } from '@/lib/auth/auth-context';
 import { useMissions } from '@/hooks/use-missions';
+import { useTracking } from '@/hooks/use-tracking';
+import { RouteModal } from './route-modal';
 
 export function DriverMissions() {
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
   const driverId = user?.id;
   const { missions, loading, error, refresh } = useMissions(driverId || '');
+  const { startMission, completeMission, activeMissions, isTracking, loading: trackingLoading, getActiveMissionByTransport } = useTracking();
 
   // Dialog state
   const [openNeeds, setOpenNeeds] = useState(false);
   const [openDetails, setOpenDetails] = useState(false);
+  const [showRouteModal, setShowRouteModal] = useState(false);
   const [selectedMission, setSelectedMission] = useState<any>(null);
 
   const handleShowNeeds = (mission: any) => {
@@ -35,15 +40,76 @@ export function DriverMissions() {
     setOpenNeeds(true);
   };
 
+  // Terminer une mission de transport
+  const handleCompleteMission = async (mission: any) => {
+    try {
+      const active = getActiveMissionByTransport(mission.id);
+      if (active?.id) {
+        const ok = await completeMission(active.id);
+        if (ok) {
+          refresh();
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la fin de la mission:', error);
+    }
+  };
+
   const handleShowDetails = (mission: any) => {
     setSelectedMission(mission);
     setOpenDetails(true);
+  };
+
+  const handleShowItinerary = (mission: any) => {
+    setSelectedMission(mission);
+    setShowRouteModal(true);
   };
 
   const handleCloseDialogs = () => {
     setOpenNeeds(false);
     setOpenDetails(false);
     setSelectedMission(null);
+  };
+
+  const handleCloseRouteModal = () => {
+    setShowRouteModal(false);
+    setSelectedMission(null);
+  };
+
+  // Plus besoin de logique Google Maps complexe - utilisation du RouteModal réutilisable
+
+  // Commencer une mission de transport
+  const handleStartMission = async (mission: any) => {
+    try {
+      const missionData = {
+        driverId: driverId!,
+        transportId: mission.id,
+        childName: mission.child.name,
+        from: {
+          address: mission.from.address,
+          lat: mission.from.lat || 0,
+          lng: mission.from.lng || 0,
+        },
+        to: {
+          address: mission.to.address,
+          lat: mission.to.lat || 0,
+          lng: mission.to.lng || 0,
+        },
+      };
+
+      const result = await startMission(mission.id, missionData);
+      if (result) {
+        // Rafraîchir la liste des missions
+        refresh();
+      }
+    } catch (error) {
+      console.error('Erreur lors du démarrage de la mission:', error);
+    }
+  };
+
+  // Vérifier si une mission est déjà active
+  const isMissionActive = (missionId: string) => {
+    return activeMissions.some(active => active.transportId === missionId);
   };
 
   // Affichage si non connecté
@@ -110,11 +176,31 @@ export function DriverMissions() {
                     </div>
 
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 mb-2">
                         <User className="h-4 w-4 text-primary" />
                         <h4 className="font-medium">
                           {mission.child.name} ({mission.child.age} ans)
                         </h4>
+                        {(mission as any).transportType && (
+                          <Badge 
+                            variant="outline" 
+                            className={`text-[10px] h-5 py-0 px-2 ${
+                              (mission as any).transportType === 'aller-retour'
+                                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                : (mission as any).transportType === 'aller'
+                                ? 'bg-green-50 text-green-700 border-green-200'
+                                : 'bg-orange-50 text-orange-700 border-orange-200'
+                            }`}
+                          >
+                            {
+                              (mission as any).transportType === 'aller-retour'
+                                ? 'Aller-Retour'
+                                : (mission as any).transportType === 'aller'
+                                ? 'Aller'
+                                : 'Retour'
+                            }
+                          </Badge>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap gap-1 mt-2">
@@ -172,10 +258,24 @@ export function DriverMissions() {
                               <DropdownMenuItem onSelect={() => handleShowNeeds(mission)}>
                                 Voir besoins
                               </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onSelect={() => {/* TODO: commencer le trajet */ }}>
-                                Commencer le trajet
+                              <DropdownMenuItem onSelect={() => handleShowItinerary(mission)}>
+                                Itinéraire
                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {!isMissionActive(mission.id) ? (
+                                <DropdownMenuItem 
+                                  onSelect={() => handleStartMission(mission)}
+                                  disabled={trackingLoading}
+                                >
+                                  Commencer le trajet
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem 
+                                  onSelect={() => handleCompleteMission(mission)}
+                                >
+                                  Terminer le trajet
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -264,7 +364,7 @@ export function DriverMissions() {
       {openNeeds && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
-            <h2 className="text-lg font-bold mb-2">Besoins de l'enfant</h2>
+            <h2 className="text-lg font-bold mb-2">Besoins de l&apos;enfant</h2>
             <div className="py-2 mb-4">
               {selectedMission?.child?.needs && selectedMission.child.needs.length > 0 ? (
                 <ul className="list-disc pl-5">
@@ -292,10 +392,13 @@ export function DriverMissions() {
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
             <h2 className="text-lg font-bold mb-2">Détails du transport</h2>
             <div className="py-2 space-y-2 mb-4">
-              <div><b>Parent:</b> {selectedMission?.parentName || 'N/A'}</div>
+              <div><b>Parent:</b> {selectedMission?.parent.name || 'N/A'}</div>
               <div><b>Enfant:</b> {selectedMission?.child?.name || 'N/A'}</div>
               <div><b>Âge:</b> {selectedMission?.child?.age || 'N/A'} ans</div>
               <div><b>Besoins:</b> {selectedMission?.child?.needs && selectedMission.child.needs.length > 0 ? selectedMission.child.needs.join(', ') : 'Aucun'}</div>
+              {selectedMission?.child?.personality && (
+                <div><b>Personnalité:</b> {selectedMission.child.personality}</div>
+              )}
               <div><b>Date:</b> {selectedMission?.date && (typeof selectedMission.date.toDate === 'function' ? selectedMission.date.toDate().toLocaleDateString('fr-FR') : new Date(selectedMission.date).toLocaleDateString('fr-FR'))}</div>
               <div><b>Départ:</b> {selectedMission?.from?.name} — {selectedMission?.from?.address}</div>
               <div><b>Arrivée:</b> {selectedMission?.to?.name} — {selectedMission?.to?.address}</div>
@@ -309,6 +412,13 @@ export function DriverMissions() {
           </div>
         </div>
       )}
+
+      {/* RouteModal réutilisable */}
+      <RouteModal
+        isOpen={showRouteModal}
+        onClose={handleCloseRouteModal}
+        mission={selectedMission}
+      />
     </div >
   );
 }
