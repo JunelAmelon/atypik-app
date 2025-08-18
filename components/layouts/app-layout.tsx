@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '@/components/logo';
 import { ModeToggle } from '@/components/mode-toggle';
 import { AuthGuard } from '@/lib/auth/auth-guard';
@@ -36,7 +36,8 @@ import { SideNav } from '@/components/navigation/side-nav';
 import { BottomNav } from '@/components/navigation/bottom-nav';
 import { NotificationsPopover } from '@/components/notifications/notifications-popover';
 import { motion, AnimatePresence } from 'framer-motion';
-import { db, generateToken, onMessageListener } from '@/firebase/ClientApp';
+import { onMessage } from 'firebase/messaging';
+import { messaging, db, generateToken } from '@/firebase/ClientApp';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface AppLayoutProps {
@@ -47,11 +48,14 @@ interface AppLayoutProps {
 export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  const [showNotifPrompt, setShowNotifPrompt] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   // Handle scroll for header styling and check for device types
   useEffect(() => {
@@ -85,39 +89,39 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
     };
     
   }, []);
-  // Demander la permission de notifications (une seule fois au montage si à l'état par défaut)
+  // Déterminer si on affiche le prompt (sans demander automatiquement la permission)
   useEffect(() => {
-    const askPermission = async () => {
-      if (typeof window === 'undefined') return;
-      if (!('Notification' in window)) {
-        console.warn('Notifications non supportées par ce navigateur');
-        return;
-      }
-      try {
-        if (Notification.permission === 'default') {
-          const res = await Notification.requestPermission();
-          console.log('Permission notifications:', res);
-        }
-      } catch (e) {
-        console.error('Erreur lors de la demande de permission notifications:', e);
-      }
-    };
-    askPermission();
+    if (typeof window === 'undefined') return;
+    try {
+      const supported = 'serviceWorker' in navigator && 'Notification' in window;
+      const dismissed = localStorage.getItem('notifPromptDismissed') === '1';
+      const shouldShow = supported && !dismissed && Notification.permission === 'default';
+      setShowNotifPrompt(shouldShow);
+    } catch (e) {
+      console.warn('Impossible de vérifier le support des notifications:', e);
+    }
   }, []);
   useEffect(() => {
-    // Écoute sécurisée côté client uniquement
-    onMessageListener().then((payload) => {
-      if (payload) {
-        console.log('Message received. ', payload);
-      }
+    if (typeof window === 'undefined') return;
+    if (!messaging) return;
+
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log('Message received. ', payload);
+      // ...
     });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
-  // Génération et stockage du token FCM via generateToken() (global)
+  // Génération et stockage du token FCM via generateToken() (uniquement si déjà autorisé)
   useEffect(() => {
     const setupFCMToken = async () => {
       if (typeof window === 'undefined') return;
       if (!user?.id) return;
+      if (!('Notification' in window)) return;
+      if (Notification.permission !== 'granted') return;
 
       try {
         const token = await generateToken();
@@ -148,6 +152,51 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
 
     setupFCMToken();
   }, [user?.id]);
+
+  // Actions du prompt
+  const handleEnableNotifications = async () => {
+    if (typeof window === 'undefined') return;
+    if (!user?.id) return;
+    setNotifLoading(true);
+    try {
+      const token = await generateToken();
+      if (!token) {
+        // Si l'utilisateur refuse ou si échec, on garde le prompt affiché
+        return;
+      }
+      await setDoc(
+        doc(db, 'notificationSettings', user.id),
+        {
+          id: user.id,
+          userId: user.id,
+          fcmToken: token,
+          isEnabled: true,
+          permissions: {
+            browser: true,
+            transport: true,
+            messages: true,
+            general: true,
+          },
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+      setShowNotifPrompt(false);
+      localStorage.setItem('notifPromptDismissed', '1');
+    } catch (e) {
+      console.error('Activation des notifications échouée:', e);
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  const handleDismissNotifPrompt = () => {
+    setShowNotifPrompt(false);
+    if (typeof window !== 'undefined') {
+      try { localStorage.setItem('notifPromptDismissed', '1'); } catch {}
+    }
+  };
 
   if (!isMounted) {
     return null;
@@ -224,6 +273,8 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
                   variant="ghost" 
                   size="icon" 
                   className="hidden md:flex text-muted-foreground hover:text-foreground h-9 w-9"
+                  onClick={() => router.push('/profile')}
+                  aria-label="Ouvrir le profil"
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
@@ -245,18 +296,20 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 sm:w-56">
                     <DropdownMenuLabel className="text-sm">Mon compte</DropdownMenuLabel>
-                    <DropdownMenuItem className="flex items-center gap-2 text-sm">
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2 text-sm"
+                      onClick={() => router.push('/profile')}
+                    >
                       <UserRound className="h-4 w-4" />
                       <span>Profil</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 text-sm">
-                      <Bell className="h-4 w-4" />
-                      <span>Notifications</span>
                     </DropdownMenuItem>
                     {isMobile && (
                       <>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="flex items-center gap-2 text-sm">
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-sm"
+                          onClick={() => router.push('/profile')}
+                        >
                           <Settings className="h-4 w-4" />
                           <span>Paramètres</span>
                         </DropdownMenuItem>
@@ -329,6 +382,31 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
         )}
         
         {/* Zone réservée pour une implémentation custom des notifications (init SW, prompts, etc.) */}
+        {showNotifPrompt && (
+          <div className="fixed bottom-4 right-4 z-50 w-[320px] max-w-[90vw] rounded-lg border bg-card shadow-lg">
+            <div className="p-4 flex items-start gap-3">
+              <div className="mt-0.5">
+                <Bell className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <div>
+                  <h4 className="font-semibold text-sm">Activer les notifications</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Recevez des alertes en temps réel pour vos transports et messages importants.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={handleEnableNotifications} disabled={notifLoading} className="h-8 text-xs flex-1">
+                    {notifLoading ? 'Activation…' : 'Activer'}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleDismissNotifPrompt} className="h-8 text-xs">
+                    Plus tard
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AuthGuard>
   );
