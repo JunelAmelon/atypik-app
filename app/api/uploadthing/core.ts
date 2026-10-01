@@ -15,11 +15,15 @@ export const ourFileRouter = {
     audio: { maxFileSize: "16MB" },
     video: { maxFileSize: "64MB" }
   })
-    .middleware(() => {
-      return { userId: "user123" };
+    .middleware(async ({ req }) => {
+      const authHeader = req.headers.get("authorization") || "";
+      const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+      if (!token) {
+        throw new Error("Authentification requise pour téléverser");
+      }
+      return { userId: "authenticated_user" };
     })
     .onUploadComplete(({ metadata, file }) => {
-      console.log("Upload complet", file);
       
       // Retourner simplement les informations du fichier pour le client
       // Sans essayer d'enregistrer dans Firestore pour l'instant

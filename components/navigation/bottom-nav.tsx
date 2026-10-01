@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -11,9 +12,11 @@ import {
   Car,
   FileText,
   Users,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/auth-context';
+import { nativeHaptics } from '@/lib/mobile/haptics';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -23,6 +26,8 @@ export function BottomNav() {
   if (!user) return null;
   
   const isParent = user.role === 'parent';
+  const isDriver = user.role === 'driver';
+  const isAdmin = user.role === 'admin';
   
   const parentNavItems = [
     {
@@ -80,15 +85,66 @@ export function BottomNav() {
     },
   ];
   
-  const navItems = isParent ? parentNavItems : driverNavItems;
-  
+  const adminNavItems = [
+    {
+          icon: LayoutDashboard,
+          label: 'Dashboard',
+          href: '/admin/dashboard',
+        },
+        {
+          icon: Users,
+          label: 'Parents',
+          href: '/admin/parents',
+        },
+        {
+          icon: Users,
+          label: 'Chauffeurs',
+          href: '/admin/drivers',
+        },
+        {
+          icon: ShieldCheck,
+          label: 'Assignations',
+          href: '/admin/assignments',
+        },
+        {
+          icon: UserRound,
+          label: 'Administrateurs',
+          href: '/admin/admins',
+        },
+    // Optionally add messages or profile later if needed
+  ];
+
+  const navItems = isParent
+    ? parentNavItems
+    : isDriver
+    ? driverNavItems
+    : isAdmin
+    ? adminNavItems
+    : [];
+
+  // Précharger toutes les pages en arrière-plan dès l'affichage pour un clic instantané (0 latence)
+  useEffect(() => {
+    navItems.forEach((item) => {
+      router.prefetch(item.href);
+    });
+  }, [navItems, router]);
+
   const handleNavigation = (href: string) => {
+    nativeHaptics.light();
     router.push(href);
   };
 
+  const gridColsClass = navItems.length === 5
+    ? 'grid-cols-5'
+    : navItems.length === 4
+    ? 'grid-cols-4'
+    : navItems.length === 3
+    ? 'grid-cols-3'
+    : 'grid-cols-5';
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t safe-bottom shadow-md">
-      <div className="grid grid-cols-5 h-16">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 border-t safe-bottom shadow-lg">
+      <div className={cn('grid h-16', gridColsClass)}>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           
@@ -98,8 +154,8 @@ export function BottomNav() {
               onClick={() => handleNavigation(item.href)}
               className={cn(
                 'relative flex flex-col items-center justify-center',
-                'transition-colors duration-200',
-                isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                'transition-all duration-150 active:scale-90 select-none',
+                isActive ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               <div className="relative">

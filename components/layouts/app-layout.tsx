@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '@/components/logo';
 import { ModeToggle } from '@/components/mode-toggle';
+import { useTheme } from 'next-themes';
 import { AuthGuard } from '@/lib/auth/auth-guard';
 import { UserRole, useAuth } from '@/lib/auth/auth-context';
 import DriverPending from '@/components/driver/driver-pending';
@@ -13,7 +14,10 @@ import {
   UserRound,
   Menu,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Sun,
+  Moon,
+  Monitor
 } from 'lucide-react';
 import {
   Sheet,
@@ -39,6 +43,40 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { onMessage } from 'firebase/messaging';
 import { messaging, db, generateToken } from '@/firebase/ClientApp';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications, ActionPerformed, Token } from '@capacitor/push-notifications';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { useToast } from '@/hooks/use-toast';
+
+function getNotificationTargetUrl(data: any, role?: string): string {
+  if (!data) return role === 'driver' ? '/driver/dashboard' : '/parent/dashboard';
+
+  if (data.url) return data.url;
+  if (data.clickAction) return data.clickAction;
+
+  switch (data.type) {
+    case 'message':
+    case 'driver_message':
+      if (data.conversationId) {
+        return role === 'driver'
+          ? `/driver/messages?conversationId=${data.conversationId}`
+          : `/parent/messages?conversationId=${data.conversationId}`;
+      }
+      return role === 'driver' ? '/driver/messages' : '/parent/messages';
+
+    case 'transport':
+    case 'driver_transport':
+      if (data.transportId) {
+        return role === 'driver'
+          ? `/driver/transport?id=${data.transportId}`
+          : `/parent/tracking?transportId=${data.transportId}`;
+      }
+      return role === 'driver' ? '/driver/calendar' : '/parent/calendar';
+
+    default:
+      return role === 'driver' ? '/driver/dashboard' : '/parent/dashboard';
+  }
+}
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -47,6 +85,8 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
   const { user, logout } = useAuth();
+  const { toast } = useToast();
+  const { setTheme } = useTheme();
   const pathname = usePathname();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
@@ -83,12 +123,20 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
     handleResize();
     setIsMounted(true);
 
+    // Masquer le splash screen natif dès que l'interface Next.js est montée
+    if (Capacitor.isNativePlatform()) {
+      SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {});
+    }
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
     
   }, []);
+
+
+
   // Déterminer si on affiche le prompt (sans demander automatiquement la permission)
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -101,24 +149,133 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
       console.warn('Impossible de vérifier le support des notifications:', e);
     }
   }, []);
+  // 1. Gestion des notifications Push Natives (Android / Capacitor)
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (!Capacitor.isNativePlatform()) return;
+    if (!user?.id) return;
+
+    let isMounted = true;
+
+    const setupNativePush = async () => {
+      try {
+        let permStatus = await PushNotifications.checkPermissions();
+        if (permStatus.receive === 'prompt') {
+          permStatus = await PushNotifications.requestPermissions();
+        }
+
+        if (permStatus.receive !== 'granted') {
+          console.warn('[Push Mobile] Permission non accordée sur Android');
+          return;
+        }
+
+        await PushNotifications.register();
+
+        // Enregistrement du token FCM natif
+        await PushNotifications.addListener('registration', async (token: Token) => {
+          if (!isMounted || !user?.id) return;
+          console.log('[Push Mobile] Token FCM natif obtenu:', token.value);
+          try {
+            await setDoc(
+              doc(db, 'notificationSettings', user.id),
+              {
+                id: user.id,
+                userId: user.id,
+                fcmToken: token.value,
+                isEnabled: true,
+                platform: 'android',
+                updatedAt: serverTimestamp(),
+              },
+              { merge: true }
+            );
+          } catch (e) {
+            console.error('[Push Mobile] Erreur sauvegarde token FCM:', e);
+          }
+        });
+
+        // Gestion du CLIC sur la notification native Android (barre de statut / en veille)
+        await PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
+          console.log('[Push Mobile] Clic sur notification native:', action);
+          const data = action.notification?.data;
+          const targetUrl = getNotificationTargetUrl(data, user?.role);
+          if (targetUrl) {
+            router.push(targetUrl);
+          }
+        });
+
+        // Gestion de la notification reçue en premier plan (app ouverte)
+        await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          console.log('[Push Mobile] Notification reçue en premier plan:', notification);
+          const targetUrl = getNotificationTargetUrl(notification.data, user?.role);
+          toast({
+            title: notification.title || 'Nouvelle notification',
+            description: notification.body || '',
+            action: (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (targetUrl) router.push(targetUrl);
+                }}
+              >
+                Ouvrir
+              </Button>
+            ),
+          });
+        });
+      } catch (err) {
+        console.error('[Push Mobile] Erreur initialisation push:', err);
+      }
+    };
+
+    setupNativePush();
+
+    return () => {
+      isMounted = false;
+      PushNotifications.removeAllListeners().catch(() => {});
+    };
+  }, [user?.id, user?.role, router]);
+
+  // 2. Gestion des notifications Web en premier plan (navigateur desktop/mobile)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (Capacitor.isNativePlatform()) return;
     if (!messaging) return;
 
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log('Message received. ', payload);
-      // ...
+      console.log('[Push Web] Notification reçue en premier plan:', payload);
+      const title = payload.notification?.title || payload.data?.title || 'Nouvelle notification';
+      const body = payload.notification?.body || payload.data?.body || '';
+      const data = payload.data;
+      const targetUrl = getNotificationTargetUrl(data, user?.role);
+
+      toast({
+        title,
+        description: body,
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (targetUrl) router.push(targetUrl);
+            }}
+          >
+            Ouvrir
+          </Button>
+        ),
+      });
     });
 
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [user?.role, router]);
 
-  // Génération et stockage du token FCM via generateToken() (uniquement si déjà autorisé)
+  // 3. Génération et stockage du token FCM Web via generateToken() (si autorisé)
   useEffect(() => {
     const setupFCMToken = async () => {
       if (typeof window === 'undefined') return;
+      if (Capacitor.isNativePlatform()) return; // Géré par le flux natif ci-dessus
       if (!user?.id) return;
       if (!('Notification' in window)) return;
       if (Notification.permission !== 'granted') return;
@@ -134,6 +291,7 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
             userId: user.id,
             fcmToken: token,
             isEnabled: true,
+            platform: 'web',
             permissions: {
               browser: true,
               transport: true,
@@ -146,7 +304,7 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
           { merge: true }
         );
       } catch (err) {
-        console.error('Erreur lors de la génération/enregistrement du token FCM:', err);
+        console.error('Erreur lors de la génération/enregistrement du token FCM Web:', err);
       }
     };
 
@@ -262,13 +420,13 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
               </div>
 
               <div className="flex items-center gap-1 sm:gap-2">
-                <Button 
+                {/* <Button 
                   variant="ghost" 
                   size="icon" 
                   className="hidden lg:flex text-muted-foreground hover:text-foreground h-9 w-9"
                 >
                   <HelpCircle className="h-4 w-4" />
-                </Button>
+                </Button> */}
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -313,9 +471,26 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
                           <Settings className="h-4 w-4" />
                           <span>Paramètres</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-2 text-sm">
-                          <HelpCircle className="h-4 w-4" />
-                          <span>Aide</span>
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-sm"
+                          onClick={() => setTheme('light')}
+                        >
+                          <Sun className="h-4 w-4" />
+                          <span>Thème clair</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-sm"
+                          onClick={() => setTheme('dark')}
+                        >
+                          <Moon className="h-4 w-4" />
+                          <span>Thème sombre</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-sm"
+                          onClick={() => setTheme('system')}
+                        >
+                          <Monitor className="h-4 w-4" />
+                          <span>Thème système</span>
                         </DropdownMenuItem>
                       </>
                     )}

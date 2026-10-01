@@ -11,6 +11,7 @@ import { DriverMessageList } from './driver-message-list';
 import { DriverMessageInput } from './driver-message-input';
 import { useState, useMemo, useEffect } from 'react';
 import { Message } from '@/hooks/use-messages';
+import { authFetch } from '@/lib/api/auth-fetch';
 
 export function DriverMessages() {
   const { user } = useAuth();
@@ -47,11 +48,9 @@ export function DriverMessages() {
   // Sélectionner automatiquement la première conversation disponible si aucune n'est sélectionnée
   // SEULEMENT sur desktop pour éviter la sélection automatique sur mobile
   useEffect(() => {
-    console.log('Conversations disponibles:', conversations);
     // Vérifier si on est sur desktop (largeur d'écran >= 768px)
     const isDesktop = window.innerWidth >= 768;
     if (conversations.length > 0 && !selectedConversationId && isDesktop) {
-      console.log('Sélection automatique de la première conversation (desktop seulement):', conversations[0].id);
       setSelectedConversationId(conversations[0].id);
     }
   }, [conversations, selectedConversationId]);
@@ -76,9 +75,8 @@ export function DriverMessages() {
         if (receiverId) {
           const title = `Nouveau message de ${user?.name || 'Chauffeur'}`;
           const body = content?.slice(0, 140) || 'Vous avez reçu un nouveau message';
-          await fetch('/api/notifications/send', {
+          await authFetch('/api/notifications/send', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: receiverId,
               title,

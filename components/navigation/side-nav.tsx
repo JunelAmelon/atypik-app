@@ -12,11 +12,14 @@ import {
   Users,
   FileText,
   HelpCircle,
-  BarChart
+  BarChart,
+  ShieldCheck,
+  Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface SideNavProps {
   className?: string;
@@ -30,6 +33,8 @@ export function SideNav({ className }: SideNavProps) {
   if (!user) return null;
   
   const isParent = user.role === 'parent';
+  const isDriver = user.role === 'driver';
+  const isAdmin = user.role === 'admin';
   
   const parentNavItems = [
     {
@@ -61,6 +66,34 @@ export function SideNav({ className }: SideNavProps) {
       icon: MessageSquare,
       label: 'Messagerie',
       href: '/parent/messages',
+    },
+  ];
+
+  const adminNavItems = [
+    {
+      icon: LayoutDashboard,
+      label: 'Dashboard',
+      href: '/admin/dashboard',
+    },
+    {
+      icon: Users,
+      label: 'Parents',
+      href: '/admin/parents',
+    },
+    {
+      icon: Users,
+      label: 'Chauffeurs',
+      href: '/admin/drivers',
+    },
+    {
+      icon: ShieldCheck,
+      label: 'Assignations',
+      href: '/admin/assignments',
+    },
+    {
+      icon: UserRound,
+      label: 'Administrateurs',
+      href: '/admin/admins',
     },
   ];
   
@@ -103,26 +136,24 @@ export function SideNav({ className }: SideNavProps) {
       label: 'Profil',
       href: '/profile',
     },
-    {
-      icon: HelpCircle,
-      label: 'Aide',
-      href: `/${user.role}/help`,
-    },
   ];
   
-  const navItems = isParent ? parentNavItems : driverNavItems;
+  const navItems = isAdmin ? adminNavItems : isParent ? parentNavItems : driverNavItems;
   
   return (
     <aside className={cn("h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-sm flex flex-col", className)}>
       {/* En-tête du menu */}
       <div className="p-4 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-            <UserRound className="h-5 w-5 text-primary" />
-          </div>
+          <Avatar className="h-8 w-8 border">
+            <AvatarImage src={user.avatar || ''} alt={user.name || 'Utilisateur'} />
+            <AvatarFallback>
+              {(user.name || 'U').split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div>
             <p className="text-sm font-medium">{user.name || 'Utilisateur'}</p>
-            <p className="text-xs text-muted-foreground">{isParent ? 'Espace Parent' : 'Espace Chauffeur'}</p>
+            <p className="text-xs text-muted-foreground">{isAdmin ? 'Espace Admin' : isParent ? 'Espace Parent' : 'Espace Chauffeur'}</p>
           </div>
         </div>
       </div>

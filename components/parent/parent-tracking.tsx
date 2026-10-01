@@ -229,7 +229,9 @@ export function ParentTracking() {
       {/* Sélection du transport */}
       <Card>
         <CardHeader>
-          <CardTitle>Sélectionner un transport</CardTitle>
+          <CardTitle>
+            <span className="text-sm sm:text-base">Sélectionner un transport</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Select value={selectedTransportId} onValueChange={setSelectedTransportId}>
@@ -307,6 +309,20 @@ export function ParentTracking() {
                 <p className="text-sm font-medium">Heure prévue</p>
                 <p className="text-sm text-muted-foreground">{selectedTransport.time}</p>
               </div>
+
+              {selectedTransport.motif && selectedTransport.motif.trim() !== '' && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Motif</p>
+                  <p className="text-sm text-muted-foreground break-words">{selectedTransport.motif}</p>
+                </div>
+              )}
+
+              {typeof (selectedTransport as any).waitingTime === 'number' && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Temps d&apos;attente</p>
+                  <p className="text-sm text-muted-foreground">{(selectedTransport as any).waitingTime} min</p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <p className="text-sm font-medium">Départ</p>

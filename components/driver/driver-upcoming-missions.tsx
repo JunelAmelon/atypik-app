@@ -151,9 +151,10 @@ export function DriverUpcomingMissions({ missions }: DriverUpcomingMissionsProps
   
   return (
     <>
-      <Card className="rounded-lg bg-card text-card-foreground overflow-hidden border-0 shadow-lg bg-gradient-to-br from-background to-secondary/10">
+      <Card className="rounded-lg bg-card text-card-foreground overflow-hidden border border-gray-200 dark:border-gray-700 shadow-md">
+
         <div className="flex flex-col space-y-1.5 p-6 pb-2">
-          <h3 className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
+          <h3 className="font-semibold text-base sm:text-lg whitespace-nowrap   leading-none tracking-tight flex items-center gap-2">
             <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10">
               <Clock className="h-4 w-4 text-primary" />
             </div>
@@ -211,40 +212,42 @@ export function DriverUpcomingMissions({ missions }: DriverUpcomingMissionsProps
                   {/* Itinéraire */}
                   <div className="bg-secondary/30 rounded-xl p-4 mb-4 relative overflow-hidden">
                     {mission.transportType === 'aller-retour' ? (
-                      // Affichage pour Aller-Retour avec 3 points
-                      <div className="flex items-start gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-50 flex items-center justify-center z-10">
-                            <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                          </div>
-                          <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
-                          <div className="h-6 w-6 rounded-full border-2 border-blue-500 bg-blue-50 flex items-center justify-center z-10">
-                            <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                          </div>
-                          <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
-                          <div className="h-6 w-6 rounded-full border-2 border-orange-500 bg-orange-50 flex items-center justify-center z-10">
-                            <div className="h-2 w-2 rounded-full bg-orange-500"></div>
-                          </div>
+                      // Affichage pour Aller-Retour avec 3 points alignés
+                      <div className="relative grid grid-cols-[24px_1fr] gap-x-3 gap-y-6">
+                        {/* Ligne verticale centrée sur les marqueurs */}
+                        <div className="absolute left-[12px] top-3 bottom-3 w-0.5 bg-primary/20" />
+
+                        {/* Départ */}
+                        <div className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-50 flex items-center justify-center z-10">
+                          <div className="h-2 w-2 rounded-full bg-green-500"></div>
                         </div>
-                        <div className="flex-1 space-y-5">
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-2">
-                              <span className="text-green-600">Départ:</span> {mission.from.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-2">
-                              <span className="text-blue-600">Destination:</span> {mission.to.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-2">
-                              <span className="text-orange-600">Retour:</span> {mission.from.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
-                          </div>
+                        <div>
+                          <p className="text-sm font-medium flex items-center gap-2">
+                            <span className="text-green-600">Départ:</span> {mission.from.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
+                        </div>
+
+                        {/* Destination */}
+                        <div className="h-6 w-6 rounded-full border-2 border-blue-500 bg-blue-50 flex items-center justify-center z-10">
+                          <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium flex items-center gap-2">
+                            <span className="text-blue-600">Destination:</span> {mission.to.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
+                        </div>
+
+                        {/* Retour */}
+                        <div className="h-6 w-6 rounded-full border-2 border-orange-500 bg-orange-50 flex items-center justify-center z-10">
+                          <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium flex items-center gap-2">
+                            <span className="text-orange-600">Retour:</span> {mission.from.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
                         </div>
                       </div>
                     ) : (
