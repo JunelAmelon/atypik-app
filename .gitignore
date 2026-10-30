@@ -39,6 +39,7 @@ next-env.d.ts
 *.jks
 *.aab
 *.apk
+upload_cert.cer
 .env
 .env.production
 .env.staging
