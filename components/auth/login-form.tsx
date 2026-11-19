@@ -20,6 +20,7 @@ import {
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useToast } from '@/hooks/use-toast';
+import { getAuthErrorMessage } from '@/lib/auth/auth-errors';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
@@ -61,11 +62,10 @@ export function LoginForm() {
         variant: 'default',
       });
     } catch (error) {
-      // L'erreur est déjà gérée dans le hook useFirebaseAuth
       if (error) {
         toast({
           title: 'Erreur de connexion',
-          description: (error as any).message || 'Une erreur est survenue lors de la connexion',
+          description: getAuthErrorMessage(error),
           variant: 'destructive',
         });
       }
@@ -125,7 +125,7 @@ export function LoginForm() {
       if (error) {
         toast({
           title: 'Erreur de connexion avec Google',
-          description: (error as any).message || 'Une erreur est survenue lors de la connexion avec Google',
+          description: getAuthErrorMessage(error),
           variant: 'destructive',
         });
       }

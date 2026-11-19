@@ -4,6 +4,7 @@ import { FirebaseError } from 'firebase/app';
 import { deleteUser, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { doc, deleteDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db, auth } from '@/firebase/ClientApp';
+import { getAuthErrorMessage } from '@/lib/auth/auth-errors';
 
 type AuthErrorCode = 
   | 'auth/invalid-email'
@@ -37,41 +38,13 @@ export function useFirebaseAuth(): UseFirebaseAuthReturn {
 
   const clearError = () => setError(null);
 
-  const getErrorMessage = (code: AuthErrorCode): string => {
-    switch (code) {
-      case 'auth/invalid-email':
-        return 'Adresse email invalide.';
-      case 'auth/user-disabled':
-        return 'Ce compte a été désactivé.';
-      case 'auth/user-not-found':
-      case 'auth/wrong-password':
-        return 'Email ou mot de passe incorrect.';
-      case 'auth/email-already-in-use':
-        return 'Cette adresse email est déjà utilisée.';
-      case 'auth/weak-password':
-        return 'Le mot de passe est trop faible. Il doit contenir au moins 6 caractères.';
-      case 'auth/network-request-failed':
-        return 'Problème de connexion réseau. Vérifiez votre connexion internet.';
-      case 'auth/too-many-requests':
-        return 'Trop de tentatives de connexion. Veuillez réessayer plus tard.';
-      case 'auth/requires-recent-login':
-        return 'Cette opération nécessite une connexion récente. Veuillez vous reconnecter.';
-      default:
-        return 'Une erreur s\'est produite. Veuillez réessayer.';
-    }
-  };
-
   const login = async (email: string, password: string): Promise<void> => {
     clearError();
     setIsLoading(true);
     try {
       await authLogin(email, password);
     } catch (error) {
-      if (error instanceof FirebaseError) {
-        setError(getErrorMessage(error.code as AuthErrorCode));
-      } else {
-        setError('Une erreur s\'est produite lors de la connexion.');
-      }
+      setError(getAuthErrorMessage(error));
       throw error;
     } finally {
       setIsLoading(false);
@@ -84,11 +57,7 @@ export function useFirebaseAuth(): UseFirebaseAuthReturn {
     try {
       await authRegister(userData, role);
     } catch (error) {
-      if (error instanceof FirebaseError) {
-        setError(getErrorMessage(error.code as AuthErrorCode));
-      } else {
-        setError('Une erreur s\'est produite lors de l\'inscription.');
-      }
+      setError(getAuthErrorMessage(error));
       throw error;
     } finally {
       setIsLoading(false);
@@ -101,11 +70,7 @@ export function useFirebaseAuth(): UseFirebaseAuthReturn {
     try {
       await authLoginWithGoogle(role);
     } catch (error) {
-      if (error instanceof FirebaseError) {
-        setError(getErrorMessage(error.code as AuthErrorCode));
-      } else {
-        setError('Une erreur s\'est produite lors de la connexion avec Google.');
-      }
+      setError(getAuthErrorMessage(error));
       throw error;
     } finally {
       setIsLoading(false);
@@ -151,11 +116,7 @@ export function useFirebaseAuth(): UseFirebaseAuthReturn {
       await deleteUser(firebaseUser);
 
     } catch (error) {
-      if (error instanceof FirebaseError) {
-        setError(getErrorMessage(error.code as AuthErrorCode));
-      } else {
-        setError('Une erreur s\'est produite lors de la suppression du compte.');
-      }
+      setError(getAuthErrorMessage(error));
       throw error;
     } finally {
       setIsLoading(false);
