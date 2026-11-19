@@ -17,18 +17,6 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com'
-      },
-      {
-        protocol: 'https',
-        hostname: 'www.paypal.com'
-      },
-      {
-        protocol: 'https',
-        hostname: 'apis.google.com'
-      },
-      {
-        protocol: 'https',
-        hostname: 'accounts.google.com'
       }
     ]
   },
@@ -64,6 +52,10 @@ const nextConfig = {
       {
         source: '/(.*)',
         headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://www.paypal.com https://*.paypal.com https://*.paypalobjects.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://images.pexels.com https://img.freepik.com https://images.unsplash.com https://res.cloudinary.com https://*.googleusercontent.com https://*.gstatic.com https://*.paypal.com https://*.paypalobjects.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebase.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fcm.googleapis.com https://firebaseinstallations.googleapis.com https://accounts.google.com https://www.paypal.com https://*.paypal.com https://*.paypalobjects.com; frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://www.paypal.com https://*.paypal.com; media-src 'self' blob: data: https://res.cloudinary.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com https://www.paypal.com https://*.paypal.com",
+          },
           {
             key: 'X-Frame-Options',
             value: 'SAMEORIGIN',
