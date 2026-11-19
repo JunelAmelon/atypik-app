@@ -152,7 +152,7 @@ export function useFirebaseAuth(): UseFirebaseAuthReturn {
         batch.delete(doc.ref);
       });
 
-      // 4. Supprimer les transports créés par l'utilisateur ou qui lui sont assignés
+      // 4. Supprimer les transports créés par l'utilisateur (si parent)
       const transportsAsUserQuery = query(
         collection(db, 'transports'),
         where('userId', '==', userId)
@@ -162,13 +162,14 @@ export function useFirebaseAuth(): UseFirebaseAuthReturn {
         batch.delete(doc.ref);
       });
 
+      // 4b. Si l'utilisateur est un chauffeur, désassigner ses missions pour ne pas détruire les trajets des parents
       const transportsAsDriverQuery = query(
         collection(db, 'transports'),
         where('driverId', '==', userId)
       );
       const transportsAsDriverSnapshot = await getDocs(transportsAsDriverQuery);
       transportsAsDriverSnapshot.forEach((doc) => {
-        batch.delete(doc.ref);
+        batch.update(doc.ref, { driverId: null, driverName: null });
       });
 
       // 4b. Supprimer les missions actives liées à l'utilisateur
