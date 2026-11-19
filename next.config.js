@@ -17,6 +17,18 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.paypal.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'apis.google.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'accounts.google.com'
       }
     ]
   },
