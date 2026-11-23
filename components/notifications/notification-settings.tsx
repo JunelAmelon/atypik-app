@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Bell, BellOff, Smartphone, MessageSquare, Car, Info } from 'lucide-react';
+import { Bell, BellOff, Smartphone, MessageSquare, CarFront, Info } from 'lucide-react';
+import { LoaderDots } from '@/components/ui/loader';
 import { useNotifications } from '@/hooks/use-notifications';
 import { useToast } from '@/hooks/use-toast';
 
@@ -142,7 +143,7 @@ export function NotificationSettings() {
               >
                 {isEnabling ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <LoaderDots className="mr-2" />
                     Activation en cours...
                   </>
                 ) : (
@@ -180,7 +181,7 @@ export function NotificationSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Car className="h-4 w-4 text-muted-foreground" />
+                      <CarFront className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <p className="text-sm font-medium">Transports</p>
                         <p className="text-xs text-muted-foreground">

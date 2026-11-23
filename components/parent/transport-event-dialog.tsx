@@ -22,16 +22,16 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { MapPin } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { FormDialogShell, formDialogContentClass } from '@/components/ui/form-dialog-shell';
 import { useChildren } from '@/hooks/use-children';
 import { useAuth } from '@/lib/auth/auth-context';
-import { AddressSelector } from '@/components/ui/address-selector';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/firebase/ClientApp';
+import { BanAddressAutocomplete } from '@/components/ui/ban-address-autocomplete';
 import { authFetch } from '@/lib/api/auth-fetch';
 
 // Fonction pour comparer les dates sans tenir compte de l'heure
@@ -253,13 +253,15 @@ export function TransportEventDialog({
           try {
             if (user?.selectedDriverId) {
               const notifTitle = 'Transport programmé';
-              const notifBody = `${childName} • ${data.transportType} le ${format(data.date, 'dd/MM/yyyy', { locale: fr })} à ${data.time}`;
+              const notifBody = `${childName} • ${data.transportType} le ${format(data.date, 'dd/MM/yyyy', { locale: fr })} à ${data.time} • ${from.address} → ${to.address}`;
+              // Un seul appel : notif in-app + push + e-mail brandé (best-effort côté serveur)
               await authFetch('/api/notifications/send', {
                 method: 'POST',
                 body: JSON.stringify({
                   userId: user.selectedDriverId,
                   title: notifTitle,
                   body: notifBody,
+                  clickAction: '/driver/calendar',
                   data: {
                     type: 'transport',
                     childId: data.childId,
@@ -274,42 +276,6 @@ export function TransportEventDialog({
             console.error('Erreur envoi notification push:', e);
           }
 
-          // Envoi email (best-effort) au chauffeur sélectionné
-          try {
-            const driverId = user?.selectedDriverId;
-            if (driverId) {
-              const driverSnap = await getDoc(doc(db, 'users', driverId));
-              const driverData = driverSnap.exists() ? (driverSnap.data() as any) : null;
-              const driverEmail: string | undefined = driverData?.email;
-              const driverName: string = driverData?.displayName || driverData?.name || 'Chauffeur';
-              if (driverEmail) {
-                const subject = `Nouveau transport programmé • ${childName} • ${format(data.date, 'dd/MM/yyyy', { locale: fr })}`;
-                const messageHtml = `
-                  <p style="margin:4px 0;">Bonjour ${driverName},</p>
-                  <p style="margin:4px 0;">Un parent a programmé un transport.</p>
-                  <p style="margin:4px 0;"><strong>Enfant:</strong> ${childName}</p>
-                  <p style="margin:4px 0;"><strong>Date:</strong> ${format(data.date, 'dd/MM/yyyy', { locale: fr })} à ${data.time}</p>
-                  <p style="margin:4px 0;"><strong>Type:</strong> ${data.transportType}</p>
-                  <p style="margin:4px 0;"><strong>Motif:</strong> ${data.motif}</p>
-                  <p style="margin:4px 0;"><strong>Délai d'attente:</strong> ${typeof data.waitingTime === 'number' ? data.waitingTime : ''} min</p>
-                  <p style="margin:4px 0;"><strong>Départ:</strong> ${from.address}</p>
-                  <p style="margin:4px 0;"><strong>Arrivée:</strong> ${to.address}</p>
-                  ${typeof distance === 'number' ? `<p style=\"margin:4px 0;\"><strong>Distance estimée:</strong> ${(distance / 1000).toFixed(2)} km</p>` : ''}
-                `;
-                await authFetch('/api/email/send', {
-                  method: 'POST',
-                  body: JSON.stringify({
-                    to: driverEmail,
-                    subject,
-                    template: 'generic',
-                    variables: { title: 'Nouveau transport programmé', messageHtml },
-                  }),
-                });
-              }
-            }
-          } catch (e) {
-            console.error('Erreur envoi email au chauffeur:', e);
-          }
           form.reset();
           setFrom(null); setTo(null); setDistance(null);
           onOpenChange(false);
@@ -332,9 +298,10 @@ export function TransportEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-          <DialogTitle>Programmer un transport</DialogTitle>
+      <DialogContent className={`${formDialogContentClass} sm:max-w-[880px]`}>
+        <FormDialogShell caption="Chaque trajet, en toute sérénité">
+        <DialogHeader className="sticky top-0 z-20 -mx-5 -mt-5 border-b bg-background px-5 pb-3 pt-5 sm:-mx-6 sm:-mt-6 sm:px-6 sm:pt-6">
+          <DialogTitle className="font-brand text-2xl font-bold">Programmer un transport</DialogTitle>
           <DialogDescription className="flex flex-col space-y-1">
             <span>Pour le {selectedDate ? format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr }) : ''}</span>
             {isPastDate && (
@@ -346,7 +313,11 @@ export function TransportEventDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Section : enfant & horaire */}
+            <section>
+              <h3 className="font-brand text-base font-bold">Enfant &amp; horaire</h3>
+              <div className="mt-4 space-y-4 border-t-2 border-slate-900 pt-4">
             {/* Enfant et type de transport */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -444,80 +415,109 @@ export function TransportEventDialog({
                 )}
               />
             </div>
+              </div>
+            </section>
 
-            {/* Motif (optionnel) */}
-            <FormField
-              control={form.control}
-              name="motif"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Motif</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: RDV à l&apos;hôpital, visite médicale, etc." required {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            
-
+            {/* Section : itinéraire */}
+            <section>
+              <h3 className="font-brand text-base font-bold">Itinéraire</h3>
+              <div className="mt-4 space-y-4 border-t-2 border-slate-900 pt-4">
             {/* Adresses: responsive grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Champ Lieu de départ */}
-              <AddressSelector
-                value={from?.address || ''}
-                onChange={val => {
-                  const newFrom = val ? { address: val, lat: 0, lng: 0 } : null;
-                  setFrom(newFrom);
-                  form.setValue('from', newFrom || { address: '', lat: 0, lng: 0 });
-                }}
-                onSelect={res => {
-                  setFrom(res);
-                  form.setValue('from', res);
-                }}
-                placeholder="Adresse de départ"
-                restrictRegion={process.env.NEXT_PUBLIC_REGION_CODE || 'FR'}
-                disabled={!mapsLoaded}
-                label="Lieu de départ"
-              />
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">Lieu de départ</label>
+                <BanAddressAutocomplete
+                  value={from?.address || ''}
+                  onChange={val => {
+                    const newFrom = val ? { address: val, lat: 0, lng: 0 } : null;
+                    setFrom(newFrom);
+                    form.setValue('from', newFrom || { address: '', lat: 0, lng: 0 });
+                  }}
+                  onSelect={res => {
+                    const sel = { address: res.address, lat: res.lat, lng: res.lng };
+                    setFrom(sel);
+                    form.setValue('from', sel);
+                  }}
+                  placeholder="Adresse de départ"
+                />
+                {from?.address && (
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    {from.address}
+                  </p>
+                )}
+              </div>
 
               {/* Champ Lieu d&apos;arrivée */}
-              <AddressSelector
-                value={to?.address || ''}
-                onChange={val => {
-                  const newTo = val ? { address: val, lat: 0, lng: 0 } : null;
-                  setTo(newTo);
-                  form.setValue('to', newTo || { address: '', lat: 0, lng: 0 });
-                }}
-                onSelect={res => {
-                  setTo(res);
-                  form.setValue('to', res);
-                }}
-                placeholder="Adresse d&apos;arrivée (France)"
-                restrictRegion="FR"
-                disabled={!mapsLoaded}
-                label="Lieu d&apos;arrivée"
-              />
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">Lieu d&apos;arrivée</label>
+                <BanAddressAutocomplete
+                  value={to?.address || ''}
+                  onChange={val => {
+                    const newTo = val ? { address: val, lat: 0, lng: 0 } : null;
+                    setTo(newTo);
+                    form.setValue('to', newTo || { address: '', lat: 0, lng: 0 });
+                  }}
+                  onSelect={res => {
+                    const sel = { address: res.address, lat: res.lat, lng: res.lng };
+                    setTo(sel);
+                    form.setValue('to', sel);
+                  }}
+                  placeholder="Adresse d&apos;arrivée"
+                />
+                {to?.address && (
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    {to.address}
+                  </p>
+                )}
+              </div>
             </div>
             {/* Distance affichée */}
             {distance !== null && distance !== undefined && (
-              <div className="text-sm text-primary mt-2">
-                Distance estimée : {(distance / 1000).toFixed(2)} km
-              </div>
+              <p className="text-sm font-medium text-brand-teal">
+                Distance estimée : {(distance / 1000).toFixed(1)} km
+              </p>
             )}
+              </div>
+            </section>
+
+            {/* Section : motif */}
+            <section>
+              <h3 className="font-brand text-base font-bold">Motif</h3>
+              <div className="mt-4 border-t-2 border-slate-900 pt-4">
+                <FormField
+                  control={form.control}
+                  name="motif"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input placeholder="Ex: RDV à l&apos;hôpital, visite médicale, etc." required {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </section>
 
 
-            <DialogFooter className="sticky bottom-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <DialogFooter className="sticky bottom-0 z-20 -mx-5 -mb-5 flex-col-reverse gap-2 border-t bg-background px-5 py-4 sm:-mx-6 sm:-mb-6 sm:flex-row sm:justify-end sm:px-6">
               <Button
                 type="button"
                 variant="outline"
+                className="h-10 w-full sm:w-auto"
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
               >
                 Annuler
               </Button>
-              <Button type="submit" disabled={isSubmitting || isPastDate}>
+              <Button
+                type="submit"
+                className="h-10 w-full bg-primary text-white hover:bg-primary/90 sm:w-auto"
+                disabled={isSubmitting || isPastDate}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader size="sm" className="mr-2" />
@@ -532,6 +532,7 @@ export function TransportEventDialog({
             </DialogFooter>
           </form>
         </Form>
+        </FormDialogShell>
       </DialogContent>
     </Dialog>
   );

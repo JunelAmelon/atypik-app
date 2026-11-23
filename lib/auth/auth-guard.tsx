@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth, UserRole } from './auth-context';
-import { Loader } from '@/components/ui/loader';
+import { CarLoader } from '@/components/ui/loader';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -23,13 +23,17 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
         return;
       }
       
+      // Pages d'authentification publiques (connexion, inscription, réinitialisation)
+      const isAuthPage = pathname.includes('/login') || pathname.includes('/register') || pathname.includes('/reset-password');
+
       // Si non authentifié et pas sur les pages d'authentification, rediriger vers login
-      if (!isAuthenticated && !pathname.includes('/login') && !pathname.includes('/register')) {
+      if (!isAuthenticated && !isAuthPage) {
         router.push('/login');
         return;
       }
-      
+
       // Si authentifié mais sur une page d'authentification, rediriger vers le tableau de bord approprié
+      // (la réinitialisation de mot de passe reste accessible même connecté)
       if (isAuthenticated && (pathname.includes('/login') || pathname.includes('/register'))) {
         const dashboardPath = user?.role === 'parent' 
           ? '/parent/dashboard' 
@@ -61,13 +65,13 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader size="lg" />
+        <CarLoader message="Chargement de votre espace" size={220} />
       </div>
     );
   }
 
   // Auth pages should be accessible when not authenticated
-  if (!isAuthenticated && (pathname.includes('/login') || pathname.includes('/register'))) {
+  if (!isAuthenticated && (pathname.includes('/login') || pathname.includes('/register') || pathname.includes('/reset-password') || pathname.includes('/verify-email'))) {
     return <>{children}</>;
   }
 

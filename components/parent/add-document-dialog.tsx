@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { uploadToCloudinary } from '@/hooks/use-cloudinary';
-import { Loader2, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
+import { LoaderDots } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
+import { FormDialogShell, formDialogContentClass } from '@/components/ui/form-dialog-shell';
 
 interface AddDocumentDialogProps {
   open: boolean;
@@ -24,7 +26,6 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
   const [documentType, setDocumentType] = useState('PDF');
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
-  const [status, setStatus] = useState<'validated' | 'pending'>('validated');
   const [isUploading, setIsUploading] = useState(false);
   
   const { toast } = useToast();
@@ -84,7 +85,7 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
         name: documentName,
         type: documentType,
         size: `${Math.round(file.size / 1024)} KB`,
-        status: status,
+        status: 'validated',
         tags: tags.length > 0 ? tags : ['Document'],
         url: fileUrl,
         path: fileUrl,
@@ -102,7 +103,6 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
       setDocumentName('');
       setDocumentType('PDF');
       setTags([]);
-      setStatus('validated');
       onOpenChange(false);
     } catch (error) {
       console.error('Erreur lors de l\'upload:', error);
@@ -118,11 +118,12 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className={`${formDialogContentClass} sm:max-w-[760px]`}>
+        <FormDialogShell caption="Vos documents, toujours à portée de main">
         <DialogHeader>
           <DialogTitle>Ajouter un document</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="file">Fichier</Label>
@@ -169,19 +170,6 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="status">Statut</Label>
-            <Select value={status} onValueChange={(value: 'validated' | 'pending') => setStatus(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez un statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="validated">Validé</SelectItem>
-                <SelectItem value="pending">En attente</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
             <Label htmlFor="tags">Tags</Label>
             <div className="flex items-center gap-2">
               <Input
@@ -213,14 +201,14 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
           </div>
         </div>
         
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isUploading}>
+        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" className="h-10 w-full sm:w-auto" onClick={() => onOpenChange(false)} disabled={isUploading}>
             Annuler
           </Button>
-          <Button onClick={handleSubmit} disabled={isUploading}>
+          <Button onClick={handleSubmit} className="h-10 w-full bg-primary text-white hover:bg-primary/90 sm:w-auto" disabled={isUploading}>
             {isUploading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <LoaderDots className="mr-2" />
                 Chargement...
               </>
             ) : (
@@ -231,6 +219,7 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
             )}
           </Button>
         </DialogFooter>
+        </FormDialogShell>
       </DialogContent>
     </Dialog>
   );

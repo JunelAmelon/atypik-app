@@ -17,7 +17,7 @@ import {
   EmailAuthProvider,
   User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, onSnapshot } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/firebase/ClientApp';
 import { authFetch } from '@/lib/api/auth-fetch';
 
@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const isRegisteringRef = useRef(false);
+  const userDocUnsubRef = useRef<(() => void) | null>(null);
   const router = useRouter();
 
   // Login function using Firebase Authentication
@@ -224,10 +225,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         address: userData.address || null,
         role: role,
         createdAt: serverTimestamp(),
+        regionId: userData.regionId || '',
         ...(role === 'driver' && {
           licenseNumber: userData.licenseNumber || '',
           insuranceNumber: userData.insuranceNumber || '',
-          regionId: userData.regionId || '',
           status: 'pending'
         })
       });
@@ -237,27 +238,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         displayName: displayName
       }).catch((e) => console.warn('updateProfile warning:', e));
       
-      // Envoi email de confirmation si nouveau compte chauffeur (best-effort, template brandé)
+      // E-mail de bienvenue + validation de l'adresse (parent ET chauffeur, best-effort)
       try {
-        if (role === 'driver' && userData.email) {
-          const subject = 'Atypik Driver • Votre compte chauffeur a été créé';
-          const messageHtml = `
-            <p style="margin:4px 0;">Bienvenue ${displayName},</p>
-            <p style="margin:4px 0;">Votre compte chauffeur a bien été créé.</p>
-            <p style="margin:4px 0;">Votre compte est en cours d\'examen par notre équipe. Vous serez contacté dès que votre profil aura été validé.</p>
-          `;
-          await authFetch('/api/email/send', {
+        if (userData.email) {
+          await authFetch('/api/auth/verify-email/request', {
             method: 'POST',
-            body: JSON.stringify({
-              to: userData.email,
-              subject,
-              template: 'generic',
-              variables: { title: 'Compte chauffeur créé', messageHtml },
-            }),
+            body: JSON.stringify({ email: userData.email, role }),
           });
         }
       } catch (e) {
-        console.error('Erreur envoi email inscription chauffeur:', e);
+        console.error('Erreur envoi email de vérification:', e);
       }
 
       // Mettre à jour l'état local
@@ -266,9 +256,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: userCredential.user.email || '',
         name: displayName,
         role: role,
-        regionId: role === 'driver' ? userData.regionId : undefined,
+        regionId: userData.regionId || undefined,
         status: role === 'driver' ? 'pending' : undefined,
       });
+
+      // Le listener auth a été court-circuité pendant l'inscription :
+      // attacher la synchro temps réel du profil manuellement
+      attachUserDocSync(userCredential.user);
       
       // Rediriger en fonction du rôle
       router.push(getDashboardForRole(role));
@@ -518,22 +512,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [router]);
 
-  // Observer for authentication state changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // Si une inscription par email/mot de passe est en cours, laisser register() gérer l'état
-      if (isRegisteringRef.current) {
-        return;
-      }
-      setLoading(true);
-      try {
-        if (firebaseUser) {
-          // L'utilisateur est connecté, récupérer ses données depuis Firestore
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
+  // Écoute en temps réel du document profil : les changements faits par l'admin
+  // (chauffeur assigné, statut validé, région…) sont propagés immédiatement.
+  const attachUserDocSync = (firebaseUser: FirebaseUser) => {
+    userDocUnsubRef.current?.();
+    let docExisted = false;
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    userDocUnsubRef.current = onSnapshot(
+      userDocRef,
+      async (snap) => {
+        try {
+          if (snap.exists()) {
+            docExisted = true;
+            const userData = snap.data();
             const resolvedRole = normalizeRole(userData.role, 'parent');
             setUser({
               id: firebaseUser.uid,
@@ -545,8 +536,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               regionId: userData.regionId || undefined,
               selectedDriverId: userData.selectedDriverId || undefined,
             });
-          } else {
-            // Vérifier si l'utilisateur s'est connecté via Google
+          } else if (!docExisted) {
+            // Document jamais existé : nouveau compte (Google ou rôle en attente)
             const isGoogleUser = firebaseUser.providerData.some(
               (p) => p.providerId === 'google.com'
             );
@@ -558,23 +549,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               if (typeof window !== 'undefined') {
                 localStorage.removeItem('pending_google_role');
               }
+              // setDoc déclenchera un nouvel évènement snapshot qui remplira user
               await syncGoogleUserDoc(firebaseUser, pendingRole);
             }
           }
-        } else {
-          // L'utilisateur n'est pas connecté
-          setUser(null);
+          // else : le document existait et vient d'être supprimé (deleteAccount)
+          // → ne pas le recréer, la déconnexion suivra
+        } catch (error) {
+          console.error('Erreur lors de la synchronisation du profil:', error);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
+      },
+      (error) => {
         console.error('Erreur lors de la vérification de l\'authentification:', error);
         setUser(null);
-      } finally {
         setLoading(false);
       }
+    );
+  };
+
+  // Observer for authentication state changes
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      // Si une inscription par email/mot de passe est en cours, laisser register() gérer l'état
+      if (isRegisteringRef.current) {
+        return;
+      }
+      if (!firebaseUser) {
+        // Déconnexion : arrêter l'écoute du document
+        userDocUnsubRef.current?.();
+        userDocUnsubRef.current = null;
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      attachUserDocSync(firebaseUser);
     });
-    
-    // Nettoyer l'observateur lors du démontage du composant
-    return () => unsubscribe();
+
+    // Nettoyer les observateurs lors du démontage du composant
+    return () => {
+      userDocUnsubRef.current?.();
+      unsubscribeAuth();
+    };
   }, [router]);
 
   return (
